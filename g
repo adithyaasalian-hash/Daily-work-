@@ -47,13 +47,11 @@
                                                                                                                                 ball.style.top = y + "px";
 
                                                                                                                                         requestAnimationFrame(moveBall);
-                                                    }
+
+                                                                                                                            }
 
                                                         moveBall();
                                                         </script>
 
                                                         </body>
                                                         </html>
-                                                    }
-                        }
-                }
