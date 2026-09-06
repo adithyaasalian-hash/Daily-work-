@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dragon Jump</title>
+        <style>
+                :root {
+                        font-family: system-ui, sans-serif;
+                        color: #172033;
+                        background: #c8eff1;
+                }
+
+                body {
+                        margin: 0;
+                        min-height: 100vh;
+                        display: grid;
+                        place-items: center;
+                        background: linear-gradient(#c8eff1, #f7d6a4);
+                }
+
+                main {
+                        width: min(92vw, 640px);
+                        text-align: center;
+                }
+
+                h1 {
+                        margin: 0 0 1rem;
+                }
+
+                #game {
+                        position: relative;
+                        width: 100%;
+                        height: 300px;
+                        overflow: hidden;
+                        border: 3px solid #172033;
+                        border-radius: 8px;
+                        background: #fff;
+                        box-sizing: border-box;
+                }
+
+                #dragon,
+                #rock {
+                        position: absolute;
+                        bottom: 0;
+                        line-height: 1;
+                        user-select: none;
+                }
+
+                #dragon {
+                        left: 12%;
+                        font-size: 3rem;
+                }
+
+                #rock {
+                        right: -3rem;
+                        font-size: 2.5rem;
+                }
+
+                #rock.move {
+                        animation: move 2s infinite linear;
+                }
+
+                #dragon.jump {
+                        animation: jump 0.6s ease-out;
+                }
+
+                @keyframes jump {
+                        50% { bottom: 150px; }
+                }
+
+                @keyframes move {
+                        from { right: -3rem; }
+                        to { right: 100%; }
+                }
+
+                #status {
+                        min-height: 1.5em;
+                        margin: 0.75rem 0 0;
+                        font-weight: 700;
+                }
+
+                button {
+                        padding: 0.6rem 1rem;
+                        border: 0;
+                        border-radius: 6px;
+                        color: #fff;
+                        background: #172033;
+                        cursor: pointer;
+                        font: inherit;
+                }
+
+                button:hover,
+                button:focus-visible {
+                        background: #32466f;
+                }
+        </style>
+</head>
+<body>
+        <main>
+                <h1>Dragon Jump</h1>
+                <div id="game" aria-label="Dragon Jump game">
+                        <div id="dragon" aria-label="Dragon">🐉</div>
+                        <div id="rock" aria-label="Rock">🪨</div>
+                </div>
+                <p id="status" aria-live="polite">Press Space or tap Jump.</p>
+                <button id="jump-button" type="button">Jump</button>
+        </main>
+
+        <script>
+                const dragon = document.querySelector('#dragon');
+                const rock = document.querySelector('#rock');
+                const status = document.querySelector('#status');
+                const jumpButton = document.querySelector('#jump-button');
+                let isGameOver = false;
+
+                function jump() {
+                        if (isGameOver) {
+                                restart();
+                        }
+                        if (dragon.classList.contains('jump')) {
+                                return;
+                        }
+                        dragon.classList.add('jump');
+                        window.setTimeout(() => dragon.classList.remove('jump'), 600);
+                }
+
+                function restart() {
+                        isGameOver = false;
+                        rock.classList.remove('move');
+                        void rock.offsetWidth;
+                        rock.classList.add('move');
+                        status.textContent = 'Keep jumping!';
+                }
+
+                function checkCollision() {
+                        if (isGameOver) {
+                                return;
+                        }
+                        const dragonBox = dragon.getBoundingClientRect();
+                        const rockBox = rock.getBoundingClientRect();
+                        const hit = dragonBox.right > rockBox.left + 8
+                                && dragonBox.left < rockBox.right - 8
+                                && dragonBox.bottom > rockBox.top + 8;
+
+                        if (hit) {
+                                isGameOver = true;
+                                rock.classList.remove('move');
+                                status.textContent = 'Game over. Jump to try again.';
+                        }
+                }
+
+                jumpButton.addEventListener('click', jump);
+                document.addEventListener('keydown', (event) => {
+                        if (event.code === 'Space' || event.code === 'ArrowUp') {
+                                event.preventDefault();
+                                jump();
+                        }
+                });
+                restart();
+                window.setInterval(checkCollision, 30);
+        </script>
+</body>
+</html>
