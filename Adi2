@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Card Matching Game</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #222;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        #game {
+            width: 400px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .card {
+            height: 90px;
+            background: #3498db;
+            border-radius: 10px;
+            font-size: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .card.open {
+            background: white;
+            color: black;
+        }
+
+        button {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🃏 Card Matching Game</h1>
+<p>Moves: <span id="moves">0</span></p>
+
+<div id="game"></div>
+
+<button onclick="startGame()">Restart Game</button>
+
+<script>
+
+const symbols = ["🍎","🍎","🍌","🍌","🍇","🍇","🍉","🍉",
+                 "🍒","🍒","🥝","🥝","🍋","🍋","🥭","🥭"];
+
+let firstCard = null;
+let secondCard = null;
+let lock = false;
+let moves = 0;
+
+function startGame() {
+
+    let game = document.getElementById("game");
+
+    game.innerHTML = "";
+    moves = 0;
+    document.getElementById("moves").innerText = moves;
+
+    firstCard = null;
+    secondCard = null;
+    lock = false;
+
+    let cards = [...symbols];
+
+    // Shuffle cards
+    cards.sort(() => Math.random() - 0.5);
+
+    cards.forEach(symbol => {
+
+        let card = document.createElement("div");
+
+        card.className = "card";
+        card.innerText = "?";
+
+        card.onclick = function() {
+
+            if (lock || card.classList.contains("open"))
+                return;
+
+            card.innerText = symbol;
+            card.classList.add("open");
+
+            if (!firstCard) {
+                firstCard = card;
+                return;
+            }
+
+            secondCard = card;
+            moves++;
+
+            document.getElementById("moves").innerText = moves;
+
+            if (firstCard.innerText === secondCard.innerText) {
+
+                firstCard = null;
+                secondCard = null;
+
+                checkWin();
+
+            } else {
+
+                lock = true;
+
+                setTimeout(() => {
+
+                    firstCard.innerText = "?";
+                    secondCard.innerText = "?";
+
+                    firstCard.classList.remove("open");
+                    secondCard.classList.remove("open");
+
+                    firstCard = null;
+                    secondCard = null;
+
+                    lock = false;
+
+                }, 800);
+            }
+        };
+
+        game.appendChild(card);
+    });
+}
+
+function checkWin() {
+
+    let openCards = document.querySelectorAll(".card.open");
+
+    if (openCards.length === symbols.length) {
+        setTimeout(() => {
+            alert("🎉 You Won!\nMoves: " + moves);
+        }, 300);
+    }
+}
+
+startGame();
+
+</script>
+
+</body>
+</html>
