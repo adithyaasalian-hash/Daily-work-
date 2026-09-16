@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Card Matching Game</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #222;
+            color: white;
+        }
+
+        h1 {
+            margin: 20px;
+        }
+
+        #game {
+            width: 400px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(4, 90px);
+            gap: 10px;
+        }
+
+        .card {
+            width: 90px;
+            height: 90px;
+            background: #3498db;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+        }
+
+        .card.flipped {
+            background: white;
+        }
+
+        button {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🃏 Card Matching Game</h1>
+
+<p>Moves: <span id="moves">0</span></p>
+
+<div id="game"></div>
+
+<button onclick="startGame()">Restart Game</button>
+
+<script>
+
+const symbols = ["🍎","🍌","🍇","🍒","🍉","🥝","🍍","🥭"];
+
+let cards = [];
+let firstCard = null;
+let secondCard = null;
+let lock = false;
+let moves = 0;
+
+function startGame() {
+
+    cards = [...symbols, ...symbols];
+
+    // Shuffle cards
+    cards.sort(() => Math.random() - 0.5);
+
+    document.getElementById("game").innerHTML = "";
+
+    moves = 0;
+    document.getElementById("moves").innerText = moves;
+
+    firstCard = null;
+    secondCard = null;
+    lock = false;
+
+    cards.forEach((symbol, index) => {
+
+        let card = document.createElement("div");
+
+        card.classList.add("card");
+
+        card.innerText = "?";
+
+        card.dataset.symbol = symbol;
+
+        card.onclick = function() {
+            flipCard(card);
+        };
+
+        document.getElementById("game").appendChild(card);
+    });
+}
+
+function flipCard(card) {
+
+    if (lock || card === firstCard || card.classList.contains("flipped"))
+        return;
+
+    card.classList.add("flipped");
+    card.innerText = card.dataset.symbol;
+
+    if (firstCard === null) {
+
+        firstCard = card;
+
+    } else {
+
+        secondCard = card;
+        moves++;
+
+        document.getElementById("moves").innerText = moves;
+
+        checkMatch();
+    }
+}
+
+function checkMatch() {
+
+    if (firstCard.dataset.symbol === secondCard.dataset.symbol) {
+
+        firstCard = null;
+        secondCard = null;
+
+        checkWin();
+
+    } else {
+
+        lock = true;
+
+        setTimeout(() => {
+
+            firstCard.classList.remove("flipped");
+            secondCard.classList.remove("flipped");
+
+            firstCard.innerText = "?";
+            secondCard.innerText = "?";
+
+            firstCard = null;
+            secondCard = null;
+
+            lock = false;
+
+        }, 800);
+    }
+}
+
+function checkWin() {
+
+    let flipped = document.querySelectorAll(".flipped");
+
+    if (flipped.length === cards.length) {
+
+        setTimeout(() => {
+            alert("🎉 You Win!\nMoves: " + moves);
+        }, 300);
+    }
+}
+
+startGame();
+
+</script>
+
+</body>
+</html>
