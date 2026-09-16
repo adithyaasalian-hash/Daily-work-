@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jumping Monkey Game</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: skyblue;
+            text-align: center;
+            font-family: Arial;
+        }
+
+        h1 {
+            margin: 10px;
+        }
+
+        #game {
+            width: 800px;
+            height: 300px;
+            margin: auto;
+            background: lightgreen;
+            border: 4px solid black;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #monkey {
+            position: absolute;
+            left: 80px;
+            bottom: 0;
+            font-size: 50px;
+        }
+
+        #obstacle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            font-size: 45px;
+        }
+
+        .jump {
+            animation: jump 0.6s;
+        }
+
+        @keyframes jump {
+            0%   { bottom: 0; }
+            50%  { bottom: 150px; }
+            100% { bottom: 0; }
+        }
+
+        #score {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 18px;
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🐒 Jumping Monkey</h1>
+
+<div id="score">Score: 0</div>
+
+<div id="game">
+    <div id="monkey">🐒</div>
+    <div id="obstacle">🌵</div>
+</div>
+
+<button onclick="jump()">JUMP</button>
+<button onclick="location.reload()">RESTART</button>
+
+<script>
+
+let monkey = document.getElementById("monkey");
+let obstacle = document.getElementById("obstacle");
+
+let score = 0;
+let gameOver = false;
+
+// Jump function
+function jump() {
+
+    if (gameOver)
+        return;
+
+    if (monkey.classList.contains("jump"))
+        return;
+
+    monkey.classList.add("jump");
+
+    setTimeout(() => {
+        monkey.classList.remove("jump");
+    }, 600);
+}
+
+// Keyboard control
+document.addEventListener("keydown", function(event) {
+
+    if (event.code === "Space" || event.code === "ArrowUp") {
+        jump();
+    }
+
+});
+
+// Move obstacle
+setInterval(function() {
+
+    if (gameOver)
+        return;
+
+    let obstacleLeft = obstacle.offsetLeft;
+    let monkeyBottom = parseInt(
+        window.getComputedStyle(monkey).bottom
+    );
+
+    // Collision
+    if (
+        obstacleLeft < 130 &&
+        obstacleLeft > 50 &&
+        monkeyBottom < 50
+    ) {
+
+        gameOver = true;
+
+        alert("Game Over! 🐒\nScore: " + score);
+
+        return;
+    }
+
+    // Reset obstacle
+    if (obstacleLeft < -50) {
+
+        obstacle.style.right = "-50px";
+
+        score++;
+
+        document.getElementById("score").innerText =
+            "Score: " + score;
+    }
+
+    obstacle.style.left = (obstacleLeft - 5) + "px";
+
+}, 30);
+
+</script>
+
+</body>
+</html>
