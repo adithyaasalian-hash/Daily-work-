@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Racing Game</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            text-align: center;
+            font-family: Arial;
+        }
+
+        h1 {
+            color: white;
+        }
+
+        #game {
+            width: 300px;
+            height: 500px;
+            background: #555;
+            margin: auto;
+            position: relative;
+            overflow: hidden;
+            border-left: 5px solid white;
+            border-right: 5px solid white;
+        }
+
+        .line {
+            width: 10px;
+            height: 80px;
+            background: white;
+            position: absolute;
+            left: 145px;
+        }
+
+        #player {
+            width: 50px;
+            height: 80px;
+            background: red;
+            position: absolute;
+            bottom: 20px;
+            left: 125px;
+            border-radius: 10px;
+        }
+
+        .enemy {
+            width: 50px;
+            height: 80px;
+            background: blue;
+            position: absolute;
+            top: -100px;
+            border-radius: 10px;
+        }
+
+        #score {
+            color: white;
+            font-size: 22px;
+            margin: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🏎️ Car Racing</h1>
+
+<div id="score">Score: 0</div>
+
+<div id="game">
+    <div class="line" style="top: 0;"></div>
+    <div class="line" style="top: 150px;"></div>
+    <div class="line" style="top: 300px;"></div>
+    <div class="line" style="top: 450px;"></div>
+
+    <div id="player"></div>
+
+    <div class="enemy" id="enemy"></div>
+</div>
+
+<button onclick="restart()">Restart</button>
+
+<script>
+
+let player = document.getElementById("player");
+let enemy = document.getElementById("enemy");
+let scoreText = document.getElementById("score");
+
+let playerX = 125;
+let enemyY = -100;
+let enemyX = Math.random() * 250;
+
+let score = 0;
+let gameOver = false;
+
+document.addEventListener("keydown", function(event) {
+
+    if (event.key === "ArrowLeft" && playerX > 0) {
+        playerX -= 20;
+    }
+
+    if (event.key === "ArrowRight" && playerX < 250) {
+        playerX += 20;
+    }
+
+    player.style.left = playerX + "px";
+});
+
+function gameLoop() {
+
+    if (gameOver)
+        return;
+
+    enemyY += 5;
+
+    enemy.style.top = enemyY + "px";
+    enemy.style.left = enemyX + "px";
+
+    // Collision detection
+    if (
+        enemyY + 80 > 400 &&
+        enemyY < 480 &&
+        enemyX < playerX + 50 &&
+        enemyX + 50 > playerX
+    ) {
+        gameOver = true;
+        alert("💥 Game Over!\nScore: " + score);
+        return;
+    }
+
+    // Enemy passed player
+    if (enemyY > 500) {
+        score++;
+        scoreText.textContent = "Score: " + score;
+
+        enemyY = -100;
+        enemyX = Math.random() * 250;
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+function restart() {
+
+    playerX = 125;
+    enemyY = -100;
+    enemyX = Math.random() * 250;
+
+    score = 0;
+    gameOver = false;
+
+    player.style.left = playerX + "px";
+    scoreText.textContent = "Score: 0";
+
+    gameLoop();
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
