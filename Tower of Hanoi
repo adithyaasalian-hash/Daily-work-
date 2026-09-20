@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tower of Hanoi</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #f2f2f2;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #game {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            width: 90%;
+            max-width: 800px;
+            height: 350px;
+            margin: 30px auto;
+        }
+
+        .tower {
+            width: 30%;
+            height: 300px;
+            position: relative;
+            border-bottom: 10px solid #333;
+            cursor: pointer;
+        }
+
+        .tower::before {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 250px;
+            background: #333;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .disk {
+            position: absolute;
+            height: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+            background: #3498db;
+            border: 2px solid #222;
+            z-index: 2;
+        }
+
+        button, select {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        #message {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🏆 Tower of Hanoi</h1>
+
+    <label>Number of Disks:</label>
+
+    <select id="diskCount">
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+    </select>
+
+    <button onclick="startGame()">Start Game</button>
+
+    <div id="game">
+        <div class="tower" onclick="moveDisk(0)"></div>
+        <div class="tower" onclick="moveDisk(1)"></div>
+        <div class="tower" onclick="moveDisk(2)"></div>
+    </div>
+
+    <p id="message">Click a tower to select a disk.</p>
+
+    <script>
+
+        let towers = [[], [], []];
+        let selectedTower = -1;
+        let moves = 0;
+
+        function startGame() {
+
+            let n = Number(document.getElementById("diskCount").value);
+
+            towers = [[], [], []];
+            selectedTower = -1;
+            moves = 0;
+
+            // Put disks on first tower
+            for (let i = n; i >= 1; i--) {
+                towers[0].push(i);
+            }
+
+            draw();
+            document.getElementById("message").innerHTML =
+                "Select a tower to pick a disk.";
+        }
+
+        function moveDisk(tower) {
+
+            // First click
+            if (selectedTower === -1) {
+
+                if (towers[tower].length === 0) {
+                    return;
+                }
+
+                selectedTower = tower;
+
+                document.getElementById("message").innerHTML =
+                    "Now select the tower to move the disk.";
+
+                return;
+            }
+
+            // Second click
+            let from = selectedTower;
+            let to = tower;
+
+            if (from === to) {
+                selectedTower = -1;
+                return;
+            }
+
+            let disk = towers[from][towers[from].length - 1];
+
+            let targetTop =
+                towers[to][towers[to].length - 1];
+
+            // Check if move is valid
+            if (targetTop === undefined || disk < targetTop) {
+
+                towers[from].pop();
+                towers[to].push(disk);
+
+                moves++;
+
+                selectedTower = -1;
+
+                draw();
+
+                document.getElementById("message").innerHTML =
+                    "Moves: " + moves;
+
+                checkWin();
+
+            } else {
+
+                document.getElementById("message").innerHTML =
+                    "❌ You cannot place a bigger disk on a smaller disk!";
+
+                selectedTower = -1;
+            }
+        }
+
+        function draw() {
+
+            let towerElements =
+                document.querySelectorAll(".tower");
+
+            towerElements.forEach((tower, index) => {
+
+                tower.innerHTML = "";
+
+                towers[index].forEach((disk, level) => {
+
+                    let diskElement =
+                        document.createElement("div");
+
+                    diskElement.className = "disk";
+
+                    diskElement.style.width =
+                        (disk * 35 + 30) + "px";
+
+                    diskElement.style.bottom =
+                        (level * 28) + "px";
+
+                    diskElement.innerHTML = "";
+
+                    tower.appendChild(diskElement);
+
+                });
+
+            });
+        }
+
+        function checkWin() {
+
+            if (towers[2].length ===
+                Number(document.getElementById("diskCount").value)) {
+
+                document.getElementById("message").innerHTML =
+                    "🎉 Congratulations! You solved it in " +
+                    moves + " moves!";
+            }
+        }
+
+        startGame();
+
+    </script>
+
+</body>
+</html>
