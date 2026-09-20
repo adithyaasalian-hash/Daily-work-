@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tug of War Game</title>
+
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #game {
+            width: 90%;
+            max-width: 800px;
+            height: 200px;
+            margin: 30px auto;
+            position: relative;
+            background: white;
+            border: 3px solid #333;
+            overflow: hidden;
+        }
+
+        #rope {
+            position: absolute;
+            top: 90px;
+            left: 10%;
+            width: 80%;
+            height: 10px;
+            background: #8B4513;
+        }
+
+        #flag {
+            position: absolute;
+            top: 65px;
+            left: 50%;
+            font-size: 35px;
+            transform: translateX(-50%);
+        }
+
+        .player {
+            position: absolute;
+            top: 55px;
+            font-size: 60px;
+        }
+
+        #player1 {
+            left: 5%;
+        }
+
+        #player2 {
+            right: 5%;
+        }
+
+        #message {
+            font-size: 25px;
+            font-weight: bold;
+            margin: 20px;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🏆 Tug of War 🏆</h1>
+
+    <p>Player 1: Press <b>A</b> | Player 2: Press <b>L</b></p>
+
+    <div id="game">
+
+        <div id="rope"></div>
+
+        <div id="flag">🚩</div>
+
+        <div id="player1" class="player">🧑</div>
+        <div id="player2" class="player">🧑</div>
+
+    </div>
+
+    <div id="message">Start pulling!</div>
+
+    <button onclick="resetGame()">Restart</button>
+
+    <script>
+
+        let position = 50;
+        let gameOver = false;
+
+        document.addEventListener("keydown", function(event) {
+
+            if (gameOver) return;
+
+            if (event.key.toLowerCase() === "a") {
+                position -= 2;
+            }
+
+            if (event.key.toLowerCase() === "l") {
+                position += 2;
+            }
+
+            document.getElementById("flag").style.left =
+                position + "%";
+
+            // Player 1 wins
+            if (position <= 5) {
+                document.getElementById("message").innerHTML =
+                    "🎉 Player 1 Wins!";
+                gameOver = true;
+            }
+
+            // Player 2 wins
+            if (position >= 95) {
+                document.getElementById("message").innerHTML =
+                    "🎉 Player 2 Wins!";
+                gameOver = true;
+            }
+        });
+
+        function resetGame() {
+            position = 50;
+            gameOver = false;
+
+            document.getElementById("flag").style.left = "50%";
+            document.getElementById("message").innerHTML =
+                "Start pulling!";
+        }
+
+    </script>
+
+</body>
+</html>
