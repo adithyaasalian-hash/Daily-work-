@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bubble Shooter</title>
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            font-family: Arial;
+            text-align: center;
+            color: white;
+        }
+
+        h1 {
+            margin: 15px;
+        }
+
+        canvas {
+            background: #111;
+            border: 3px solid white;
+            border-radius: 10px;
+            max-width: 95%;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🫧 Bubble Shooter</h1>
+<p>Click anywhere to shoot the bubble!</p>
+
+<canvas id="game" width="400" height="600"></canvas>
+<br>
+<button onclick="location.reload()">Restart</button>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const colors = ["red", "blue", "green", "yellow", "purple"];
+
+let bubbles = [];
+let score = 0;
+
+let shooter = {
+    x: 200,
+    y: 550,
+    color: randomColor()
+};
+
+let bullet = null;
+
+// Create bubbles
+for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 8; col++) {
+        bubbles.push({
+            x: 30 + col * 48,
+            y: 40 + row * 48,
+            r: 20,
+            color: randomColor()
+        });
+    }
+}
+
+function randomColor() {
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function drawBubble(b) {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fillStyle = b.color;
+    ctx.fill();
+    ctx.strokeStyle = "white";
+    ctx.stroke();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Bubbles
+    bubbles.forEach(drawBubble);
+
+    // Shooter
+    drawBubble({
+        x: shooter.x,
+        y: shooter.y,
+        r: 20,
+        color: shooter.color
+    });
+
+    // Bullet
+    if (bullet) {
+        drawBubble(bullet);
+    }
+
+    // Score
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.fillText("Score: " + score, 10, 590);
+
+    requestAnimationFrame(draw);
+}
+
+canvas.addEventListener("click", function(e) {
+
+    if (bullet) return;
+
+    let rect = canvas.getBoundingClientRect();
+
+    let targetX = e.clientX - rect.left;
+    let targetY = e.clientY - rect.top;
+
+    let dx = targetX - shooter.x;
+    let dy = targetY - shooter.y;
+
+    let distance = Math.sqrt(dx * dx + dy * dy);
+
+    bullet = {
+        x: shooter.x,
+        y: shooter.y,
+        r: 20,
+        color: shooter.color,
+        vx: dx / distance * 7,
+        vy: dy / distance * 7
+    };
+});
+
+function update() {
+
+    if (bullet) {
+
+        bullet.x += bullet.vx;
+        bullet.y += bullet.vy;
+
+        // Wall bounce
+        if (bullet.x < 20 || bullet.x > canvas.width - 20) {
+            bullet.vx *= -1;
+        }
+
+        // Collision
+        for (let i = 0; i < bubbles.length; i++) {
+
+            let b = bubbles[i];
+
+            let dx = bullet.x - b.x;
+            let dy = bullet.y - b.y;
+
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 40) {
+
+                if (bullet.color === b.color) {
+
+                    bubbles.splice(i, 1);
+                    score += 10;
+
+                } else {
+
+                    bubbles.push({
+                        x: bullet.x,
+                        y: bullet.y,
+                        r: 20,
+                        color: bullet.color
+                    });
+                }
+
+                bullet = null;
+                shooter.color = randomColor();
+                break;
+            }
+        }
+
+        // Missed shot
+        if (bullet && bullet.y < 0) {
+            bullet = null;
+            shooter.color = randomColor();
+        }
+    }
+}
+
+function gameLoop() {
+    update();
+    requestAnimationFrame(gameLoop);
+}
+
+draw();
+gameLoop();
+</script>
+
+</body>
+</html>
