@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bubble Shooter</title>
+  <style>
+    body {
+      margin: 0;
+      background: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background: #000;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const bubbles = [];
+    const bubbleRadius = 15;
+    const colors = ["red", "blue", "green", "yellow", "purple"];
+
+    // Shooter bubble
+    let shooter = {
+      x: canvas.width / 2,
+      y: canvas.height - 30,
+      radius: bubbleRadius,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      dx: 0,
+      dy: 0
+    };
+
+    // Draw a bubble
+    function drawBubble(bubble) {
+      ctx.beginPath();
+      ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
+      ctx.fillStyle = bubble.color;
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    // Draw everything
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      bubbles.forEach(drawBubble);
+      drawBubble(shooter);
+    }
+
+    // Move shooter bubble
+    function moveShooter() {
+      shooter.x += shooter.dx;
+      shooter.y += shooter.dy;
+
+      // Collision with walls
+      if (shooter.x - shooter.radius < 0 || shooter.x + shooter.radius > canvas.width) {
+        shooter.dx *= -1;
+      }
+
+      // Stop when hitting top
+      if (shooter.y - shooter.radius <= 0) {
+        bubbles.push({...shooter});
+        resetShooter();
+      }
+    }
+
+    // Reset shooter bubble
+    function resetShooter() {
+      shooter.x = canvas.width / 2;
+      shooter.y = canvas.height - 30;
+      shooter.dx = 0;
+      shooter.dy = 0;
+      shooter.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // Game loop
+    function update() {
+      moveShooter();
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    // Shoot bubble on click
+    canvas.addEventListener("click", (e) => {
+      if (shooter.dx === 0 && shooter.dy === 0) {
+        const angle = Math.atan2(e.clientY - shooter.y, e.clientX - shooter.x);
+        shooter.dx = Math.cos(angle) * 5;
+        shooter.dy = Math.sin(angle) * 5;
+      }
+    });
+
+    update();
+  </script>
+</body>
+</html>
