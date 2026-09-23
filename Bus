@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bus Driving Game</title>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #87CEEB;
+            font-family: Arial;
+        }
+
+        #game {
+            width: 400px;
+            height: 600px;
+            margin: auto;
+            position: relative;
+            overflow: hidden;
+            background: #444;
+            border-left: 8px solid #222;
+            border-right: 8px solid #222;
+        }
+
+        /* Road lines */
+        .line {
+            position: absolute;
+            width: 8px;
+            height: 80px;
+            background: white;
+            left: 196px;
+        }
+
+        /* Player bus */
+        #bus {
+            position: absolute;
+            width: 70px;
+            height: 110px;
+            background: #ffcc00;
+            bottom: 30px;
+            left: 165px;
+            border-radius: 12px;
+            text-align: center;
+            line-height: 110px;
+            font-size: 35px;
+        }
+
+        /* Enemy cars */
+        .car {
+            position: absolute;
+            width: 60px;
+            height: 90px;
+            background: red;
+            border-radius: 10px;
+        }
+
+        #score {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 220px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="score">Score: 0</div>
+
+<div id="game">
+
+    <div id="bus">🚌</div>
+
+    <div id="gameOver">
+        GAME OVER<br><br>
+        <button onclick="location.reload()">Restart</button>
+    </div>
+
+</div>
+
+<script>
+
+    const game = document.getElementById("game");
+    const bus = document.getElementById("bus");
+    const scoreText = document.getElementById("score");
+    const gameOver = document.getElementById("gameOver");
+
+    let busX = 165;
+    let score = 0;
+    let speed = 5;
+    let gameRunning = true;
+
+    // Create road lines
+    for (let i = 0; i < 8; i++) {
+        let line = document.createElement("div");
+        line.className = "line";
+        line.style.top = (i * 90) + "px";
+        game.appendChild(line);
+    }
+
+    // Create enemy cars
+    function createCar() {
+
+        if (!gameRunning) return;
+
+        let car = document.createElement("div");
+        car.className = "car";
+
+        let lanes = [50, 170, 290];
+        car.style.left = lanes[Math.floor(Math.random() * lanes.length)] + "px";
+        car.style.top = "-100px";
+
+        game.appendChild(car);
+
+        let carY = -100;
+
+        let move = setInterval(() => {
+
+            if (!gameRunning) {
+                clearInterval(move);
+                return;
+            }
+
+            carY += speed;
+            car.style.top = carY + "px";
+
+            // Collision detection
+            let busRect = bus.getBoundingClientRect();
+            let carRect = car.getBoundingClientRect();
+
+            if (
+                busRect.left < carRect.right &&
+                busRect.right > carRect.left &&
+                busRect.top < carRect.bottom &&
+                busRect.bottom > carRect.top
+            ) {
+                gameRunning = false;
+                gameOver.style.display = "block";
+                clearInterval(move);
+            }
+
+            // Remove car
+            if (carY > 600) {
+                car.remove();
+                clearInterval(move);
+
+                score++;
+                scoreText.innerHTML = "Score: " + score;
+
+                if (score % 5 === 0) {
+                    speed++;
+                }
+            }
+
+        }, 20);
+    }
+
+    // Spawn cars
+    setInterval(createCar, 1200);
+
+    // Keyboard controls
+    document.addEventListener("keydown", function(event) {
+
+        if (!gameRunning) return;
+
+        if (event.key === "ArrowLeft" && busX > 10) {
+            busX -= 20;
+        }
+
+        if (event.key === "ArrowRight" && busX < 320) {
+            busX += 20;
+        }
+
+        bus.style.left = busX + "px";
+    });
+
+</script>
+
+</body>
+</html>
