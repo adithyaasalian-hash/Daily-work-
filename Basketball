@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Basketball Shot Game</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: skyblue;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+#score {
+    position: fixed;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 15px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+#help {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="score">
+    🏀 Score: <span id="points">0</span>
+</div>
+
+<div id="help">
+    Drag the ball backward and release!
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const pointsText = document.getElementById("points");
+
+let width;
+let height;
+
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+}
+
+resize();
+window.addEventListener("resize", resize);
+
+
+// ---------------- BALL ----------------
+
+let ball = {
+    x: 150,
+    y: 500,
+    radius: 25,
+    velocityX: 0,
+    velocityY: 0,
+    moving: false
+};
+
+
+// ---------------- HOOP ----------------
+
+let hoop = {
+    x: 700,
+    y: 250,
+    radius: 55
+};
+
+
+// ---------------- GAME ----------------
+
+let score = 0;
+let dragging = false;
+let dragX = 0;
+let dragY = 0;
+let scored = false;
+
+
+// ---------------- DRAW BACKGROUND ----------------
+
+function drawBackground() {
+
+    // Sky
+    ctx.fillStyle = "#76c7e8";
+    ctx.fillRect(0, 0, width, height);
+
+    // Clouds
+    ctx.fillStyle = "white";
+
+    ctx.beginPath();
+    ctx.arc(150, 100, 30, 0, Math.PI * 2);
+    ctx.arc(190, 90, 40, 0, Math.PI * 2);
+    ctx.arc(230, 105, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(500, 120, 30, 0, Math.PI * 2);
+    ctx.arc(540, 105, 40, 0, Math.PI * 2);
+    ctx.arc(580, 120, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ground
+    ctx.fillStyle = "#4caf50";
+    ctx.fillRect(0, height * 0.8, width, height * 0.2);
+
+    // Ground line
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.moveTo(0, height * 0.8);
+    ctx.lineTo(width, height * 0.8);
+    ctx.stroke();
+}
+
+
+// ---------------- DRAW HOOP ----------------
+
+function drawHoop() {
+
+    let x = hoop.x;
+    let y = hoop.y;
+
+    // Pole
+    ctx.fillStyle = "#555";
+
+    ctx.fillRect(
+        x + 60,
+        y - 20,
+        15,
+        height * 0.6
+    );
+
+    // Backboard
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 5;
+
+    ctx.fillRect(
+        x - 30,
+        y - 100,
+        120,
+        80
+    );
+
+    ctx.strokeRect(
+        x - 30,
+        y - 100,
+        120,
+        80
+    );
+
+    // Backboard square
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 4;
+
+    ctx.strokeRect(
+        x - 5,
+        y - 75,
+        55,
+        45
+    );
+
+    // Rim
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 7;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y,
+        hoop.radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.stroke();
+
+    // Net
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+
+    for (let i = -3; i <= 3; i++) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x + i * 15,
+            y
+        );
+
+        ctx.lineTo(
+            x + i * 10,
+            y + 70
+        );
+
+        ctx.stroke();
+    }
+}
+
+
+// ---------------- DRAW BALL ----------------
+
+function drawBall() {
+
+    ctx.fillStyle = "#f57c00";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+    ctx.stroke();
+
+
+    // Basketball lines
+
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.radius * 0.7,
+        -1.2,
+        1.2
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        ball.x - ball.radius,
+        ball.y
+    );
+
+    ctx.quadraticCurveTo(
+        ball.x,
+        ball.y - 10,
+        ball.x + ball.radius,
+        ball.y
+    );
+
+    ctx.stroke();
+}
+
+
+// ---------------- AIM LINE ----------------
+
+function drawAim() {
+
+    if (!dragging)
+        return;
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 4;
+
+    ctx.setLineDash([10, 10]);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        ball.x,
+        ball.y
+    );
+
+    ctx.lineTo(
+        dragX,
+        dragY
+    );
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+}
+
+
+// ---------------- MOUSE / TOUCH ----------------
+
+canvas.addEventListener("pointerdown", function(e) {
+
+    let distance = Math.hypot(
+        e.clientX - ball.x,
+        e.clientY - ball.y
+    );
+
+    if (distance < 60 && !ball.moving) {
+
+        dragging = true;
+
+        dragX = e.clientX;
+        dragY = e.clientY;
+    }
+});
+
+
+canvas.addEventListener("pointermove", function(e) {
+
+    if (dragging) {
+
+        dragX = e.clientX;
+        dragY = e.clientY;
+    }
+});
+
+
+canvas.addEventListener("pointerup", function(e) {
+
+    if (!dragging)
+        return;
+
+    dragging = false;
+
+    let powerX = ball.x - dragX;
+    let powerY = ball.y - dragY;
+
+    ball.velocityX = powerX * 0.12;
+    ball.velocityY = powerY * 0.12;
+
+    ball.moving = true;
+
+    scored = false;
+});
+
+
+// ---------------- UPDATE GAME ----------------
+
+function update() {
+
+    if (!ball.moving)
+        return;
+
+
+    // Gravity
+
+    ball.velocityY += 0.5;
+
+
+    // Move ball
+
+    ball.x += ball.velocityX;
+    ball.y += ball.velocityY;
+
+
+    // Check basket
+
+    let distance = Math.hypot(
+        ball.x - hoop.x,
+        ball.y - hoop.y
+    );
+
+    if (
+        !scored &&
+        distance < hoop.radius &&
+        ball.velocityY > 0
+    ) {
+
+        score++;
+
+        pointsText.innerText = score;
+
+        scored = true;
+    }
+
+
+    // Ground collision
+
+    if (
+        ball.y + ball.radius >
+        height * 0.8
+    ) {
+
+        ball.y =
+            height * 0.8 -
+            ball.radius;
+
+        ball.velocityY *= -0.55;
+        ball.velocityX *= 0.85;
+
+
+        // Stop ball
+
+        if (
+            Math.abs(ball.velocityY) < 2
+        ) {
+
+            ball.moving = false;
+
+            setTimeout(resetBall, 500);
+        }
+    }
+
+
+    // Wall collision
+
+    if (
+        ball.x - ball.radius < 0 ||
+        ball.x + ball.radius > width
+    ) {
+
+        ball.velocityX *= -0.7;
+    }
+}
+
+
+// ---------------- RESET BALL ----------------
+
+function resetBall() {
+
+    ball.x = 150;
+    ball.y = height * 0.7;
+
+    ball.velocityX = 0;
+    ball.velocityY = 0;
+
+    ball.moving = false;
+}
+
+
+// ---------------- GAME LOOP ----------------
+
+function gameLoop() {
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+    drawBackground();
+
+    drawHoop();
+
+    drawAim();
+
+    drawBall();
+
+    update();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+resetBall();
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
