@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fruit Slice Game</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
+    font-family: Arial, sans-serif;
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    margin: 8px;
+}
+
+#game {
+    display: block;
+    margin: auto;
+    background: linear-gradient(#17202a, #283747);
+    border: 3px solid white;
+    max-width: 95vw;
+    touch-action: none;
+}
+
+.info {
+    font-size: 18px;
+}
+
+button {
+    margin: 8px;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍉 FRUIT SLICE</h1>
+
+<div class="info">
+Score: <span id="score">0</span>
+&nbsp; | &nbsp;
+Lives: <span id="lives">3</span>
+</div>
+
+<canvas id="game" width="700" height="600"></canvas>
+
+<button onclick="restartGame()">🔄 Restart</button>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let fruits = [];
+let particles = [];
+let score = 0;
+let lives = 3;
+let gameOver = false;
+
+let slicing = false;
+let mouseX = 0;
+let mouseY = 0;
+
+const fruitTypes = [
+    {emoji:"🍎", color:"#e74c3c"},
+    {emoji:"🍉", color:"#2ecc71"},
+    {emoji:"🍊", color:"#f39c12"},
+    {emoji:"🍌", color:"#f1c40f"},
+    {emoji:"🍓", color:"#ff1744"},
+    {emoji:"🥝", color:"#8bc34a"}
+];
+
+// Create fruit
+function createFruit() {
+
+    fruits.push({
+        x: Math.random() * 600 + 50,
+        y: 650,
+        size: 45,
+        speedX: (Math.random() - 0.5) * 8,
+        speedY: -(Math.random() * 8 + 12),
+        gravity: 0.35,
+        type: fruitTypes[
+            Math.floor(Math.random() * fruitTypes.length)
+        ],
+        sliced: false
+    });
+}
+
+// Create bomb
+function createBomb() {
+
+    fruits.push({
+        x: Math.random() * 600 + 50,
+        y: 650,
+        size: 40,
+        speedX: (Math.random() - 0.5) * 8,
+        speedY: -(Math.random() * 8 + 12),
+        gravity: 0.35,
+        bomb: true,
+        sliced: false
+    });
+}
+
+// Draw fruit
+function drawFruit(fruit) {
+
+    ctx.font = fruit.size + "px Arial";
+    ctx.textAlign = "center";
+
+    if (fruit.bomb) {
+        ctx.fillText("💣", fruit.x, fruit.y);
+    } else {
+        ctx.fillText(
+            fruit.type.emoji,
+            fruit.x,
+            fruit.y
+        );
+    }
+}
+
+// Update fruits
+function updateFruits() {
+
+    fruits.forEach(fruit => {
+
+        fruit.x += fruit.speedX;
+        fruit.y += fruit.speedY;
+        fruit.speedY += fruit.gravity;
+
+    });
+
+    fruits = fruits.filter(fruit => {
+
+        if (fruit.y > canvas.height + 70 && !fruit.sliced) {
+
+            if (!fruit.bomb) {
+                lives--;
+
+                document.getElementById("lives")
+                    .textContent = lives;
+
+                if (lives <= 0) {
+                    gameOver = true;
+                }
+            }
+
+            return false;
+        }
+
+        return fruit.y < canvas.height + 100;
+    });
+}
+
+// Slice fruit
+function sliceFruit(fruit) {
+
+    if (fruit.sliced) return;
+
+    fruit.sliced = true;
+
+    if (fruit.bomb) {
+
+        lives--;
+
+        document.getElementById("lives")
+            .textContent = lives;
+
+        createExplosion(
+            fruit.x,
+            fruit.y
+        );
+
+        if (lives <= 0) {
+            gameOver = true;
+        }
+
+        return;
+    }
+
+    score += 10;
+
+    document.getElementById("score")
+        .textContent = score;
+
+    createParticles(
+        fruit.x,
+        fruit.y,
+        fruit.type.color
+    );
+}
+
+// Check slicing
+function checkSlice() {
+
+    fruits.forEach(fruit => {
+
+        let dx = mouseX - fruit.x;
+        let dy = mouseY - fruit.y;
+
+        let distance = Math.sqrt(
+            dx * dx + dy * dy
+        );
+
+        if (distance < fruit.size) {
+            sliceFruit(fruit);
+        }
+    });
+}
+
+// Particles
+function createParticles(x, y, color) {
+
+    for (let i = 0; i < 15; i++) {
+
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 30,
+            color: color
+        });
+    }
+}
+
+// Bomb explosion
+function createExplosion(x, y) {
+
+    for (let i = 0; i < 30; i++) {
+
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 12,
+            vy: (Math.random() - 0.5) * 12,
+            life: 40,
+            color: "#ff5722"
+        });
+    }
+}
+
+// Draw particles
+function drawParticles() {
+
+    particles.forEach(p => {
+
+        ctx.fillStyle = p.color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            4,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+    });
+
+    particles =
+        particles.filter(p => p.life > 0);
+}
+
+// Mouse
+canvas.addEventListener("mousedown", () => {
+    slicing = true;
+});
+
+canvas.addEventListener("mouseup", () => {
+    slicing = false;
+});
+
+canvas.addEventListener("mousemove", e => {
+
+    const rect = canvas.getBoundingClientRect();
+
+    mouseX =
+        (e.clientX - rect.left)
+        * canvas.width / rect.width;
+
+    mouseY =
+        (e.clientY - rect.top)
+        * canvas.height / rect.height;
+
+    if (slicing) {
+        checkSlice();
+    }
+});
+
+// Touch
+canvas.addEventListener("touchstart", e => {
+
+    e.preventDefault();
+    slicing = true;
+
+    updateTouch(e);
+});
+
+canvas.addEventListener("touchmove", e => {
+
+    e.preventDefault();
+
+    updateTouch(e);
+    checkSlice();
+});
+
+canvas.addEventListener("touchend", () => {
+    slicing = false;
+});
+
+function updateTouch(e) {
+
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+
+    mouseX =
+        (touch.clientX - rect.left)
+        * canvas.width / rect.width;
+
+    mouseY =
+        (touch.clientY - rect.top)
+        * canvas.height / rect.height;
+}
+
+// Spawn fruits
+let spawnTimer = 0;
+
+function spawnObjects() {
+
+    spawnTimer++;
+
+    if (spawnTimer > 35) {
+
+        if (Math.random() < 0.15) {
+            createBomb();
+        } else {
+            createFruit();
+        }
+
+        spawnTimer = 0;
+    }
+}
+
+// Background
+function drawBackground() {
+
+    ctx.fillStyle = "#111";
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    // Decorative circles
+    ctx.fillStyle = "#1b2631";
+
+    for (let i = 0; i < 15; i++) {
+
+        ctx.beginPath();
+
+        ctx.arc(
+            (i * 83) % canvas.width,
+            80 + (i * 47) % 500,
+            3,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+}
+
+// Game loop
+function gameLoop() {
+
+    drawBackground();
+
+    if (!gameOver) {
+
+        spawnObjects();
+        updateFruits();
+
+        fruits.forEach(drawFruit);
+
+        drawParticles();
+
+        requestAnimationFrame(gameLoop);
+
+    } else {
+
+        fruits.forEach(drawFruit);
+        drawParticles();
+
+        ctx.fillStyle =
+            "rgba(0,0,0,0.75)";
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        ctx.fillStyle = "white";
+        ctx.font = "45px Arial";
+        ctx.textAlign = "center";
+
+        ctx.fillText(
+            "GAME OVER",
+            canvas.width / 2,
+            280
+        );
+
+        ctx.font = "25px Arial";
+
+        ctx.fillText(
+            "Score: " + score,
+            canvas.width / 2,
+            330
+        );
+    }
+}
+
+// Restart
+function restartGame() {
+
+    fruits = [];
+    particles = [];
+
+    score = 0;
+    lives = 3;
+    gameOver = false;
+    spawnTimer = 0;
+
+    document.getElementById("score")
+        .textContent = score;
+
+    document.getElementById("lives")
+        .textContent = lives;
+
+    gameLoop();
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
