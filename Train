@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Train Runner</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    margin: 8px;
+}
+
+#game {
+    display: block;
+    margin: auto;
+    background: #87ceeb;
+    border: 3px solid white;
+    max-width: 95vw;
+    max-height: 78vh;
+}
+
+.info {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+button {
+    padding: 10px 22px;
+    margin: 8px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🚂 TRAIN RUNNER</h1>
+
+<div class="info">
+    Score: <span id="score">0</span>
+    &nbsp; | &nbsp;
+    Speed: <span id="speed">5</span>
+</div>
+
+<canvas id="game" width="700" height="600"></canvas>
+
+<button onclick="restartGame()">🔄 Restart</button>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let score = 0;
+let speed = 5;
+let gameOver = false;
+
+const train = {
+    x: 315,
+    y: 430,
+    width: 70,
+    height: 110
+};
+
+let obstacles = [];
+let coins = [];
+
+let keys = {};
+
+document.addEventListener("keydown", e => {
+    keys[e.key] = true;
+});
+
+document.addEventListener("keyup", e => {
+    keys[e.key] = false;
+});
+
+// Create obstacle
+function createObstacle() {
+
+    obstacles.push({
+        x: Math.random() * 600 + 20,
+        y: -60,
+        width: 50,
+        height: 50
+    });
+}
+
+// Create coin
+function createCoin() {
+
+    coins.push({
+        x: Math.random() * 600 + 20,
+        y: -30,
+        size: 20
+    });
+}
+
+// Draw sky and scenery
+function drawBackground() {
+
+    // Sky
+    ctx.fillStyle = "#75c9f1";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Clouds
+    ctx.fillStyle = "white";
+
+    ctx.beginPath();
+    ctx.arc(100, 80, 25, 0, Math.PI * 2);
+    ctx.arc(130, 80, 35, 0, Math.PI * 2);
+    ctx.arc(165, 80, 25, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(500, 120, 25, 0, Math.PI * 2);
+    ctx.arc(535, 120, 35, 0, Math.PI * 2);
+    ctx.arc(570, 120, 25, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ground
+    ctx.fillStyle = "#3b8c3b";
+    ctx.fillRect(0, 280, canvas.width, 320);
+
+    // Track
+    ctx.fillStyle = "#555";
+    ctx.fillRect(270, 280, 160, 320);
+
+    // Rails
+    ctx.fillStyle = "#ddd";
+    ctx.fillRect(290, 280, 8, 320);
+    ctx.fillRect(402, 280, 8, 320);
+
+    // Sleepers
+    ctx.fillStyle = "#6b3e26";
+
+    for (let y = 300; y < 600; y += 45) {
+        ctx.fillRect(270, y, 160, 12);
+    }
+
+    // Trees
+    drawTree(70, 230);
+    drawTree(620, 230);
+    drawTree(150, 300);
+    drawTree(550, 310);
+}
+
+function drawTree(x, y) {
+
+    ctx.fillStyle = "#704214";
+    ctx.fillRect(x - 8, y, 16, 60);
+
+    ctx.fillStyle = "#176b32";
+
+    ctx.beginPath();
+    ctx.arc(x, y, 35, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x - 25, y + 20, 28, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x + 25, y + 20, 28, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// Draw train
+function drawTrain() {
+
+    // Body
+    ctx.fillStyle = "#c62828";
+    ctx.fillRect(
+        train.x,
+        train.y,
+        train.width,
+        train.height
+    );
+
+    // Front
+    ctx.fillStyle = "#8e0000";
+    ctx.fillRect(
+        train.x + 5,
+        train.y + 5,
+        train.width - 10,
+        25
+    );
+
+    // Window
+    ctx.fillStyle = "#80deea";
+    ctx.fillRect(
+        train.x + 15,
+        train.y + 40,
+        40,
+        30
+    );
+
+    // Light
+    ctx.fillStyle = "#fff176";
+
+    ctx.beginPath();
+    ctx.arc(
+        train.x + 35,
+        train.y + 90,
+        8,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+
+    // Wheels
+    ctx.fillStyle = "#111";
+
+    ctx.beginPath();
+    ctx.arc(train.x + 15, train.y + 108, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(train.x + 55, train.y + 108, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Smoke
+    ctx.fillStyle = "rgba(100,100,100,0.5)";
+
+    ctx.beginPath();
+    ctx.arc(train.x + 35, train.y - 20, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(train.x + 50, train.y - 45, 20, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// Draw obstacles
+function drawObstacles() {
+
+    obstacles.forEach(o => {
+
+        ctx.fillStyle = "#222";
+        ctx.fillRect(o.x, o.y, o.width, o.height);
+
+        ctx.fillStyle = "#ffcc00";
+        ctx.fillRect(o.x + 8, o.y + 8, 34, 8);
+
+        ctx.fillStyle = "#ff3333";
+        ctx.beginPath();
+        ctx.arc(o.x + 12, o.y + 42, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(o.x + 38, o.y + 42, 5, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+// Draw coins
+function drawCoins() {
+
+    coins.forEach(c => {
+
+        ctx.fillStyle = "#ffd700";
+
+        ctx.beginPath();
+        ctx.arc(
+            c.x,
+            c.y,
+            c.size,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+
+        ctx.fillStyle = "#8a6500";
+        ctx.font = "bold 15px Arial";
+        ctx.fillText("₹", c.x - 5, c.y + 6);
+    });
+}
+
+// Move objects
+function updateObjects() {
+
+    obstacles.forEach(o => {
+        o.y += speed;
+    });
+
+    coins.forEach(c => {
+        c.y += speed;
+    });
+
+    obstacles = obstacles.filter(o => o.y < canvas.height + 100);
+    coins = coins.filter(c => c.y < canvas.height + 100);
+}
+
+// Train controls
+function updateTrain() {
+
+    if (keys["ArrowLeft"] || keys["a"]) {
+        train.x -= 6;
+    }
+
+    if (keys["ArrowRight"] || keys["d"]) {
+        train.x += 6;
+    }
+
+    train.x = Math.max(
+        275,
+        Math.min(355, train.x)
+    );
+}
+
+// Collision detection
+function collision(a, b) {
+
+    return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+    );
+}
+
+// Check obstacle collision
+function checkObstacles() {
+
+    obstacles.forEach(o => {
+
+        if (collision(train, o)) {
+            gameOver = true;
+        }
+    });
+}
+
+// Check coins
+function checkCoins() {
+
+    coins.forEach((c, index) => {
+
+        let dx = train.x + 35 - c.x;
+        let dy = train.y + 50 - c.y;
+
+        let distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 45) {
+
+            score += 50;
+            coins.splice(index, 1);
+        }
+    });
+}
+
+// Spawn objects
+let obstacleTimer = 0;
+let coinTimer = 0;
+
+function spawnObjects() {
+
+    obstacleTimer++;
+
+    coinTimer++;
+
+    if (obstacleTimer > 90) {
+        createObstacle();
+        obstacleTimer = 0;
+    }
+
+    if (coinTimer > 60) {
+        createCoin();
+        coinTimer = 0;
+    }
+}
+
+// Increase difficulty
+function increaseDifficulty() {
+
+    if (score > 0 && score % 250 === 0) {
+        speed += 0.01;
+    }
+}
+
+// Main game loop
+function gameLoop() {
+
+    if (gameOver) {
+
+        drawBackground();
+        drawTrain();
+        drawObstacles();
+
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "white";
+        ctx.font = "45px Arial";
+        ctx.fillText("GAME OVER", 220, 280);
+
+        ctx.font = "25px Arial";
+        ctx.fillText(
+            "Score: " + score,
+            285,
+            330
+        );
+
+        return;
+    }
+
+    drawBackground();
+
+    updateTrain();
+    updateObjects();
+    spawnObjects();
+
+    drawObstacles();
+    drawCoins();
+    drawTrain();
+
+    checkObstacles();
+    checkCoins();
+
+    score++;
+
+    document.getElementById("score").textContent =
+        Math.floor(score / 10);
+
+    document.getElementById("speed").textContent =
+        speed.toFixed(1);
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Restart
+function restartGame() {
+
+    score = 0;
+    speed = 5;
+    gameOver = false;
+
+    train.x = 315;
+
+    obstacles = [];
+    coins = [];
+
+    obstacleTimer = 0;
+    coinTimer = 0;
+
+    gameLoop();
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
