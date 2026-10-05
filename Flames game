@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FLAMES ❤️</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    overflow: hidden;
+}
+
+.container {
+    width: 90%;
+    max-width: 430px;
+    background: rgba(255,255,255,0.95);
+    padding: 30px;
+    border-radius: 25px;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+}
+
+h1 {
+    font-size: 42px;
+    margin: 0;
+    color: #ff3366;
+}
+
+.subtitle {
+    color: #777;
+    margin-bottom: 25px;
+}
+
+.input-box {
+    margin: 15px 0;
+    text-align: left;
+}
+
+label {
+    font-weight: bold;
+    color: #444;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    margin-top: 7px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #ff416c;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.03);
+}
+
+.reset {
+    background: #444;
+}
+
+#result {
+    display: none;
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 15px;
+    background: #fff0f4;
+}
+
+#result h2 {
+    margin: 0;
+    color: #ff3366;
+}
+
+.result-letter {
+    font-size: 50px;
+    font-weight: bold;
+    margin: 10px;
+}
+
+.result-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.heart {
+    position: fixed;
+    color: rgba(255,255,255,0.6);
+    font-size: 25px;
+    animation: float 5s linear infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-10vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="heart" style="left:10%; animation-delay:1s;">❤️</div>
+<div class="heart" style="left:30%; animation-delay:3s;">💗</div>
+<div class="heart" style="left:70%; animation-delay:2s;">💕</div>
+<div class="heart" style="left:90%; animation-delay:4s;">❤️</div>
+
+<div class="container">
+
+    <h1>FLAMES ❤️</h1>
+
+    <p class="subtitle">
+        Find out your relationship!
+    </p>
+
+    <div class="input-box">
+        <label>👤 Your Name</label>
+        <input type="text" id="name1" placeholder="Enter first name">
+    </div>
+
+    <div class="input-box">
+        <label>💖 Their Name</label>
+        <input type="text" id="name2" placeholder="Enter second name">
+    </div>
+
+    <button onclick="calculateFlames()">
+        🔥 Calculate FLAMES
+    </button>
+
+    <div id="result">
+        <h2>Result</h2>
+
+        <div class="result-letter" id="letter"></div>
+
+        <div class="result-text" id="resultText"></div>
+    </div>
+
+    <button class="reset" onclick="resetGame()">
+        🔄 Reset
+    </button>
+
+</div>
+
+<script>
+
+function calculateFlames() {
+
+    let name1 = document.getElementById("name1").value
+        .toLowerCase()
+        .replace(/[^a-z]/g, "");
+
+    let name2 = document.getElementById("name2").value
+        .toLowerCase()
+        .replace(/[^a-z]/g, "");
+
+    if (name1 === "" || name2 === "") {
+        alert("Please enter both names!");
+        return;
+    }
+
+    let arr1 = name1.split("");
+    let arr2 = name2.split("");
+
+    // Remove common letters
+    for (let i = arr1.length - 1; i >= 0; i--) {
+
+        let index = arr2.indexOf(arr1[i]);
+
+        if (index !== -1) {
+            arr1.splice(i, 1);
+            arr2.splice(index, 1);
+        }
+    }
+
+    let count = arr1.length + arr2.length;
+
+    let flames = ["F", "L", "A", "M", "E", "S"];
+
+    let index = 0;
+
+    while (flames.length > 1) {
+
+        index = (index + count - 1) % flames.length;
+
+        flames.splice(index, 1);
+    }
+
+    let result = flames[0];
+
+    let meanings = {
+        F: "Friends 🤝",
+        L: "Love ❤️",
+        A: "Affection 💕",
+        M: "Marriage 💍",
+        E: "Enemies 😈",
+        S: "Siblings 👨‍👩‍👧"
+    };
+
+    document.getElementById("result").style.display = "block";
+
+    document.getElementById("letter").innerText = result;
+
+    document.getElementById("resultText").innerText =
+        meanings[result];
+}
+
+function resetGame() {
+
+    document.getElementById("name1").value = "";
+    document.getElementById("name2").value = "";
+
+    document.getElementById("result").style.display = "none";
+}
+
+</script>
+
+</body>
+</html>
