@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skate Rush</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    overflow: hidden;
+    background: #87CEEB;
+    font-family: Arial, sans-serif;
+}
+
+#game {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(#75cfff 0%, #dff7ff 65%, #b8e986 65%);
+}
+
+/* Sun */
+#sun {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: #ffd83d;
+    border-radius: 50%;
+    top: 50px;
+    right: 80px;
+}
+
+/* Ground */
+#ground {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 35%;
+    background: #555;
+    border-top: 8px solid #333;
+}
+
+/* Road lines */
+.line {
+    position: absolute;
+    bottom: 20%;
+    width: 100px;
+    height: 8px;
+    background: white;
+}
+
+/* Player */
+#player {
+    position: absolute;
+    width: 55px;
+    height: 75px;
+    left: 120px;
+    bottom: 35%;
+    z-index: 5;
+}
+
+.head {
+    width: 25px;
+    height: 25px;
+    background: #f1b27a;
+    border-radius: 50%;
+    margin: auto;
+}
+
+.body {
+    width: 28px;
+    height: 35px;
+    background: #e63946;
+    margin: 2px auto;
+    border-radius: 8px;
+}
+
+.leg {
+    position: absolute;
+    width: 8px;
+    height: 25px;
+    background: #222;
+    bottom: 12px;
+}
+
+.leg.left {
+    left: 17px;
+    transform: rotate(20deg);
+}
+
+.leg.right {
+    right: 17px;
+    transform: rotate(-20deg);
+}
+
+/* Skateboard */
+.board {
+    position: absolute;
+    width: 75px;
+    height: 8px;
+    background: #111;
+    bottom: 4px;
+    left: -10px;
+    border-radius: 10px;
+}
+
+.wheel {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    background: #222;
+    border-radius: 50%;
+    bottom: -9px;
+}
+
+.w1 { left: 0; }
+.w2 { right: 0; }
+
+/* Obstacles */
+.obstacle {
+    position: absolute;
+    width: 45px;
+    height: 45px;
+    background: #ff7b00;
+    bottom: 35%;
+    border-radius: 8px;
+    z-index: 4;
+}
+
+.ramp {
+    width: 75px;
+    height: 35px;
+    background: #9b5de5;
+    clip-path: polygon(0 100%, 100% 100%, 100% 0);
+}
+
+/* Coins */
+.coin {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: gold;
+    border: 4px solid #ff9f00;
+    z-index: 3;
+}
+
+/* UI */
+#score {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 25px;
+    font-weight: bold;
+    z-index: 20;
+}
+
+#instructions {
+    position: absolute;
+    top: 55px;
+    left: 20px;
+    font-size: 15px;
+    z-index: 20;
+}
+
+#gameOver {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    color: white;
+    z-index: 50;
+    text-align: center;
+    padding-top: 25vh;
+}
+
+#gameOver h1 {
+    font-size: 50px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 14px 30px;
+    font-size: 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="sun"></div>
+
+    <div id="ground"></div>
+
+    <div id="player">
+        <div class="head"></div>
+        <div class="body"></div>
+        <div class="leg left"></div>
+        <div class="leg right"></div>
+
+        <div class="board">
+            <div class="wheel w1"></div>
+            <div class="wheel w2"></div>
+        </div>
+    </div>
+
+    <div id="score">Score: 0</div>
+    <div id="instructions">
+        SPACE / ↑ = Jump &nbsp; | &nbsp; ↓ = Slide
+    </div>
+
+    <div id="gameOver">
+        <h1>GAME OVER</h1>
+        <p id="finalScore"></p>
+        <button onclick="restart()">Play Again</button>
+    </div>
+
+</div>
+
+<script>
+const game = document.getElementById("game");
+const player = document.getElementById("player");
+const scoreText = document.getElementById("score");
+const gameOverScreen = document.getElementById("gameOver");
+const finalScore = document.getElementById("finalScore");
+
+let jumping = false;
+let sliding = false;
+let gameOver = false;
+let score = 0;
+let speed = 7;
+let objects = [];
+
+function jump() {
+    if (jumping || gameOver) return;
+
+    jumping = true;
+
+    let height = 0;
+    let up = setInterval(() => {
+        height += 8;
+        player.style.transform = `translateY(-${height}px)`;
+
+        if (height >= 150) {
+            clearInterval(up);
+
+            let down = setInterval(() => {
+                height -= 8;
+                player.style.transform = `translateY(-${height}px)`;
+
+                if (height <= 0) {
+                    clearInterval(down);
+                    player.style.transform = "";
+                    jumping = false;
+                }
+            }, 20);
+        }
+    }, 20);
+}
+
+function slide() {
+    if (gameOver) return;
+
+    sliding = true;
+    player.style.transform = "scaleY(.55)";
+
+    setTimeout(() => {
+        sliding = false;
+
+        if (!jumping)
+            player.style.transform = "";
+    }, 700);
+}
+
+document.addEventListener("keydown", e => {
+    if (e.code === "Space" || e.code === "ArrowUp") {
+        jump();
+    }
+
+    if (e.code === "ArrowDown") {
+        slide();
+    }
+});
+
+function createObstacle() {
+    if (gameOver) return;
+
+    const obstacle = document.createElement("div");
+    obstacle.className = Math.random() > .7 ? "obstacle ramp" : "obstacle";
+
+    obstacle.style.left = window.innerWidth + "px";
+    game.appendChild(obstacle);
+
+    objects.push({
+        element: obstacle,
+        type: "obstacle"
+    });
+
+    setTimeout(createObstacle, 1200 + Math.random() * 1500);
+}
+
+function createCoin() {
+    if (gameOver) return;
+
+    const coin = document.createElement("div");
+    coin.className = "coin";
+
+    coin.style.left = window.innerWidth + "px";
+
+    let heights = [
+        "42%",
+        "50%",
+        "58%"
+    ];
+
+    coin.style.bottom =
+        heights[Math.floor(Math.random() * heights.length)];
+
+    game.appendChild(coin);
+
+    objects.push({
+        element: coin,
+        type: "coin"
+    });
+
+    setTimeout(createCoin, 900 + Math.random() * 1200);
+}
+
+function collision(a, b) {
+    const r1 = a.getBoundingClientRect();
+    const r2 = b.getBoundingClientRect();
+
+    return !(
+        r1.right < r2.left ||
+        r1.left > r2.right ||
+        r1.bottom < r2.top ||
+        r1.top > r2.bottom
+    );
+}
+
+function gameLoop() {
+
+    if (gameOver) return;
+
+    objects.forEach((obj, index) => {
+
+        let x = parseFloat(obj.element.style.left);
+
+        x -= speed;
+
+        obj.element.style.left = x + "px";
+
+        if (obj.type === "obstacle") {
+
+            if (collision(player, obj.element)) {
+
+                // Allow jumping over obstacle
+                if (!jumping) {
+                    endGame();
+                }
+            }
+        }
+
+        if (obj.type === "coin") {
+
+            if (collision(player, obj.element)) {
+
+                score += 50;
+                scoreText.innerText = "Score: " + score;
+
+                obj.element.remove();
+                objects.splice(index, 1);
+            }
+        }
+
+        if (x < -100) {
+            obj.element.remove();
+            objects.splice(index, 1);
+        }
+    });
+
+    score++;
+
+    if (score % 500 === 0) {
+        speed += 1;
+    }
+
+    scoreText.innerText = "Score: " + score;
+
+    requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+
+    gameOver = true;
+
+    finalScore.innerText = "Your Score: " + score;
+
+    gameOverScreen.style.display = "block";
+}
+
+function restart() {
+
+    objects.forEach(obj => obj.element.remove());
+
+    objects = [];
+    score = 0;
+    speed = 7;
+    gameOver = false;
+    jumping = false;
+
+    gameOverScreen.style.display = "none";
+
+    player.style.transform = "";
+
+    createObstacle();
+    createCoin();
+    gameLoop();
+}
+
+createObstacle();
+createCoin();
+gameLoop();
+</script>
+
+</body>
+</html>
