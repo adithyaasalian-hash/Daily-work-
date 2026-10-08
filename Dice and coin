@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Coin Toss & Dice 🎲</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #111827, #312e81);
+        color: white;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        background: rgba(0,0,0,0.35);
+        padding: 30px;
+        border-radius: 25px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+        margin-top: 0;
+    }
+
+    h2 {
+        margin-top: 30px;
+    }
+
+    /* COIN */
+    .coin {
+        width: 140px;
+        height: 140px;
+        margin: 20px auto;
+        border-radius: 50%;
+        background: radial-gradient(circle, #fff4a3, #d4a017);
+        border: 8px solid #f5c542;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 30px;
+        font-weight: bold;
+        color: #5c4300;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    .coin.flip {
+        animation: coinFlip 1s ease-in-out;
+    }
+
+    @keyframes coinFlip {
+        0% {
+            transform: rotateY(0deg);
+        }
+
+        50% {
+            transform: rotateY(900deg) scale(1.2);
+        }
+
+        100% {
+            transform: rotateY(1800deg);
+        }
+    }
+
+    /* DICE */
+    .dice {
+        width: 120px;
+        height: 120px;
+        margin: 20px auto;
+        background: white;
+        color: black;
+        border-radius: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 75px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    .dice.roll {
+        animation: diceRoll 0.8s ease-in-out;
+    }
+
+    @keyframes diceRoll {
+        0% {
+            transform: rotate(0deg) scale(1);
+        }
+
+        50% {
+            transform: rotate(360deg) scale(1.2);
+        }
+
+        100% {
+            transform: rotate(720deg) scale(1);
+        }
+    }
+
+    button {
+        border: none;
+        padding: 13px 25px;
+        margin: 5px;
+        border-radius: 30px;
+        font-size: 17px;
+        font-weight: bold;
+        cursor: pointer;
+        background: #f5c542;
+        color: #222;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+    }
+
+    .result {
+        font-size: 22px;
+        font-weight: bold;
+        margin: 12px;
+    }
+
+    .stats {
+        color: #ddd;
+        font-size: 14px;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.2);
+        margin: 30px 0;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🎮 Randomizer</h1>
+
+    <!-- COIN -->
+    <h2>🪙 Coin Toss</h2>
+
+    <div class="coin" id="coin">?</div>
+
+    <button onclick="tossCoin()">TOSS COIN</button>
+
+    <div class="result" id="coinResult">
+        Ready?
+    </div>
+
+    <div class="stats">
+        Heads: <span id="heads">0</span> |
+        Tails: <span id="tails">0</span>
+    </div>
+
+    <hr>
+
+    <!-- DICE -->
+    <h2>🎲 Dice Roller</h2>
+
+    <div class="dice" id="dice">⚀</div>
+
+    <button onclick="rollDice()">ROLL DICE</button>
+
+    <div class="result" id="diceResult">
+        Ready?
+    </div>
+
+</div>
+
+<script>
+
+let heads = 0;
+let tails = 0;
+
+// COIN
+function tossCoin() {
+
+    const coin = document.getElementById("coin");
+    const result = document.getElementById("coinResult");
+
+    coin.classList.remove("flip");
+
+    // Restart animation
+    void coin.offsetWidth;
+
+    coin.classList.add("flip");
+
+    result.innerHTML = "Flipping... 🪙";
+
+    setTimeout(() => {
+
+        const random = Math.random();
+
+        if (random < 0.5) {
+
+            coin.innerHTML = "H";
+            result.innerHTML = "HEADS! 🎉";
+            heads++;
+
+        } else {
+
+            coin.innerHTML = "T";
+            result.innerHTML = "TAILS! 🎉";
+            tails++;
+
+        }
+
+        document.getElementById("heads").innerHTML = heads;
+        document.getElementById("tails").innerHTML = tails;
+
+    }, 1000);
+}
+
+
+// DICE
+function rollDice() {
+
+    const dice = document.getElementById("dice");
+    const result = document.getElementById("diceResult");
+
+    dice.classList.remove("roll");
+
+    // Restart animation
+    void dice.offsetWidth;
+
+    dice.classList.add("roll");
+
+    result.innerHTML = "Rolling... 🎲";
+
+    setTimeout(() => {
+
+        const number = Math.floor(Math.random() * 6) + 1;
+
+        const diceFaces = [
+            "⚀",
+            "⚁",
+            "⚂",
+            "⚃",
+            "⚄",
+            "⚅"
+        ];
+
+        dice.innerHTML = diceFaces[number - 1];
+
+        result.innerHTML = "You rolled: " + number + " 🎉";
+
+    }, 800);
+}
+
+</script>
+
+</body>
+</html>
