@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Toss 🪙</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-family: Arial, sans-serif;
+    color: white;
+
+    background: radial-gradient(
+        circle at center,
+        #293b59,
+        #101827 65%,
+        #050810
+    );
+}
+
+.game {
+    width: 360px;
+    max-width: 94%;
+    padding: 25px;
+
+    text-align: center;
+
+    border-radius: 25px;
+
+    background: rgba(10,17,30,.9);
+
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+}
+
+h1 {
+    margin: 0;
+    font-size: 30px;
+}
+
+.subtitle {
+    margin-top: 7px;
+    color: #aeb8c8;
+}
+
+/* ---------------- SCENE ---------------- */
+
+.scene {
+    position: relative;
+
+    height: 310px;
+
+    margin-top: 5px;
+
+    overflow: visible;
+}
+
+/* Ground shadow */
+
+.shadow {
+    position: absolute;
+
+    left: 50%;
+    bottom: 38px;
+
+    width: 120px;
+    height: 25px;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background: rgba(0,0,0,.5);
+
+    filter: blur(8px);
+
+    transition:
+        width .05s linear,
+        opacity .05s linear;
+}
+
+/* ---------------- COIN ---------------- */
+
+.coin {
+    position: absolute;
+
+    left: 50%;
+    bottom: 55px;
+
+    width: 120px;
+    height: 120px;
+
+    transform:
+        translateX(-50%)
+        rotateY(0deg);
+
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 30px;
+    font-weight: bold;
+
+    color: #654400;
+
+    background:
+        radial-gradient(
+            circle at 32% 25%,
+            #fffbd0,
+            #ffe66b 25%,
+            #f3c43e 55%,
+            #b87908 100%
+        );
+
+    border: 7px solid #f4c441;
+
+    box-shadow:
+        inset 0 0 12px rgba(255,255,255,.7),
+        0 10px 25px rgba(0,0,0,.5);
+
+    transform-style: preserve-3d;
+
+    will-change: transform, bottom;
+}
+
+/* Coin inner ring */
+
+.coin::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 9px;
+
+    border-radius: 50%;
+
+    border: 3px dashed rgba(100,65,0,.35);
+}
+
+/* ---------------- BUTTON ---------------- */
+
+button {
+    border: none;
+
+    padding: 15px 38px;
+
+    border-radius: 50px;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    color: #493200;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff3a0,
+            #f5c842,
+            #d99b12
+        );
+
+    box-shadow:
+        0 5px 0 #8c6200,
+        0 10px 25px rgba(0,0,0,.4);
+
+    transition: .15s;
+}
+
+button:hover {
+    transform: translateY(-3px);
+}
+
+button:active {
+    transform: translateY(2px);
+}
+
+button:disabled {
+    opacity: .55;
+}
+
+/* ---------------- RESULT ---------------- */
+
+#result {
+    margin-top: 18px;
+
+    min-height: 32px;
+
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.stats {
+    margin-top: 8px;
+
+    color: #b8c1d0;
+}
+
+/* Landing bounce */
+
+.landing {
+    animation: landing .3s ease-out;
+}
+
+@keyframes landing {
+
+    0% {
+        transform:
+            translateX(-50%)
+            scale(1);
+    }
+
+    35% {
+        transform:
+            translateX(-50%)
+            scale(1.12,.88);
+    }
+
+    70% {
+        transform:
+            translateX(-50%)
+            scale(.96,1.04);
+    }
+
+    100% {
+        transform:
+            translateX(-50%)
+            scale(1);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <h1>🪙 Coin Toss</h1>
+
+    <div class="subtitle">
+        Toss the coin!
+    </div>
+
+    <div class="scene">
+
+        <div class="shadow" id="shadow"></div>
+
+        <div class="coin" id="coin">?</div>
+
+    </div>
+
+    <button id="tossBtn" onclick="tossCoin()">
+        🪙 TOSS
+    </button>
+
+    <div id="result">
+        Ready?
+    </div>
+
+    <div class="stats">
+        Heads: <span id="heads">0</span>
+        &nbsp; | &nbsp;
+        Tails: <span id="tails">0</span>
+    </div>
+
+</div>
+
+<script>
+
+const coin = document.getElementById("coin");
+const shadow = document.getElementById("shadow");
+const result = document.getElementById("result");
+const button = document.getElementById("tossBtn");
+
+let heads = 0;
+let tails = 0;
+let busy = false;
+
+
+/* ---------------- TOSS ---------------- */
+
+function tossCoin() {
+
+    if (busy) return;
+
+    busy = true;
+    button.disabled = true;
+
+    result.innerHTML = "🪙 Tossing...";
+
+    /* Random result */
+
+    const finalResult =
+        Math.random() < 0.5
+        ? "HEADS"
+        : "TAILS";
+
+    /* Animation values */
+
+    const start = performance.now();
+
+    const duration = 1700;
+
+    const startHeight = 55;
+
+    const maxHeight = 235;
+
+    /* Number of flips */
+
+    const flips =
+        5 + Math.floor(Math.random() * 3);
+
+    function animate(now) {
+
+        const elapsed = now - start;
+
+        let progress =
+            Math.min(elapsed / duration, 1);
+
+        /*
+            Smooth arc
+
+            sin() creates:
+            ground → top → ground
+        */
+
+        const arc =
+            Math.sin(progress * Math.PI);
+
+        /*
+            Height of coin
+        */
+
+        const height =
+            startHeight +
+            arc * maxHeight;
+
+        /*
+            Horizontal movement
+            creates a slight arc
+        */
+
+        const x =
+            Math.sin(progress * Math.PI) * 45;
+
+        /*
+            Rotation
+
+            Starts fast,
+            slows slightly near the top,
+            then continues.
+        */
+
+        const rotation =
+            progress * flips * 360;
+
+        /*
+            Slight tilt
+        */
+
+        const tilt =
+            Math.sin(progress * Math.PI * 2) * 12;
+
+        /*
+            Coin scale
+
+            Slightly larger near top
+        */
+
+        const scale =
+            1 +
+            arc * .12;
+
+        coin.style.bottom =
+            height + "px";
+
+        coin.style.transform =
+            `
+            translateX(calc(-50% + ${x}px))
+            rotateY(${rotation}deg)
+            rotateZ(${tilt}deg)
+            scale(${scale})
+            `;
+
+        /*
+            Shadow
+
+            High coin = small shadow
+        */
+
+        const shadowScale =
+            1 - arc * .55;
+
+        shadow.style.width =
+            (120 * shadowScale) + "px";
+
+        shadow.style.opacity =
+            .55 - arc * .3;
+
+        /*
+            Continue
+        */
+
+        if (progress < 1) {
+
+            requestAnimationFrame(animate);
+
+        } else {
+
+            finish(finalResult);
+        }
+    }
+
+    requestAnimationFrame(animate);
+}
+
+
+/* ---------------- FINISH ---------------- */
+
+function finish(finalResult) {
+
+    /*
+        Set final face
+    */
+
+    if (finalResult === "HEADS") {
+
+        coin.innerHTML = "H";
+        heads++;
+
+        result.innerHTML =
+            "HEADS! 🎉";
+
+    } else {
+
+        coin.innerHTML = "T";
+        tails++;
+
+        result.innerHTML =
+            "TAILS! 🎉";
+    }
+
+    /*
+        Update score
+    */
+
+    document.getElementById("heads").innerHTML =
+        heads;
+
+    document.getElementById("tails").innerHTML =
+        tails;
+
+    /*
+        Landing bounce
+    */
+
+    coin.classList.remove("landing");
+
+    void coin.offsetWidth;
+
+    coin.classList.add("landing");
+
+    /*
+        Reset position
+    */
+
+    setTimeout(() => {
+
+        coin.style.bottom = "55px";
+
+        coin.style.transform =
+            "translateX(-50%)";
+
+        shadow.style.width = "120px";
+        shadow.style.opacity = ".55";
+
+        busy = false;
+        button.disabled = false;
+
+    }, 350);
+}
+
+</script>
+
+</body>
+</html>
