@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Attendance Tracker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: #f2f4f7;
+    color: #222;
+}
+
+header {
+    background: linear-gradient(135deg, #182848, #4b6cb7);
+    color: white;
+    padding: 25px 15px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+header p {
+    margin: 7px 0 0;
+    opacity: 0.9;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: white;
+    padding: 18px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #666;
+}
+
+.card p {
+    margin: 8px 0 0;
+    font-size: 27px;
+    font-weight: bold;
+}
+
+.subject {
+    background: white;
+    margin-bottom: 15px;
+    padding: 18px;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+.subject-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subject h2 {
+    margin: 0;
+    font-size: 19px;
+}
+
+.percentage {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.progress {
+    width: 100%;
+    height: 10px;
+    background: #ddd;
+    border-radius: 10px;
+    margin: 12px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+.stats {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.present {
+    background: #27ae60;
+    color: white;
+}
+
+.absent {
+    background: #e74c3c;
+    color: white;
+}
+
+.reset {
+    background: #34495e;
+    color: white;
+}
+
+.add {
+    background: #4b6cb7;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+.add-box {
+    background: white;
+    padding: 18px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+input {
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 70%;
+}
+
+.history {
+    background: white;
+    padding: 18px;
+    border-radius: 15px;
+    margin-top: 20px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+.history-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+@media(max-width:700px) {
+    .summary {
+        grid-template-columns: 1fr;
+    }
+
+    .subject-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .buttons {
+        flex-wrap: wrap;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>📚 My Attendance Tracker</h1>
+    <p>Track your semester attendance easily</p>
+</header>
+
+<div class="container">
+
+    <div class="summary">
+        <div class="card">
+            <h3>Total Classes</h3>
+            <p id="totalClasses">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Total Present</h3>
+            <p id="totalPresent">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Overall Attendance</h3>
+            <p id="overall">0%</p>
+        </div>
+    </div>
+
+    <div class="add-box">
+        <h3>Add Subject</h3>
+
+        <input
+            type="text"
+            id="subjectName"
+            placeholder="Enter subject name"
+        >
+
+        <button class="add" onclick="addSubject()">
+            + Add Subject
+        </button>
+    </div>
+
+    <div id="subjects"></div>
+
+    <div class="history">
+        <h2>📅 Attendance History</h2>
+        <div id="history"></div>
+    </div>
+
+</div>
+
+<script>
+
+let data = JSON.parse(localStorage.getItem("attendanceData")) || {
+
+    "BCS501": {
+        present: 0,
+        absent: 0
+    },
+
+    "BCS503": {
+        present: 0,
+        absent: 0
+    },
+
+    "BCS515B": {
+        present: 0,
+        absent: 0
+    },
+
+    "BCS586": {
+        present: 0,
+        absent: 0
+    },
+
+    "Placement Training Lab": {
+        present: 0,
+        absent: 0
+    }
+};
+
+let historyData =
+    JSON.parse(localStorage.getItem("attendanceHistory")) || [];
+
+
+function saveData() {
+
+    localStorage.setItem(
+        "attendanceData",
+        JSON.stringify(data)
+    );
+
+    localStorage.setItem(
+        "attendanceHistory",
+        JSON.stringify(historyData)
+    );
+}
+
+
+function addSubject() {
+
+    let input = document.getElementById("subjectName");
+
+    let name = input.value.trim();
+
+    if (name === "") {
+        alert("Enter a subject name");
+        return;
+    }
+
+    if (data[name]) {
+        alert("Subject already exists");
+        return;
+    }
+
+    data[name] = {
+        present: 0,
+        absent: 0
+    };
+
+    input.value = "";
+
+    saveData();
+    display();
+}
+
+
+function markAttendance(subject, status) {
+
+    if (status === "present") {
+        data[subject].present++;
+    } else {
+        data[subject].absent++;
+    }
+
+    let today = new Date().toLocaleDateString();
+
+    historyData.unshift({
+        date: today,
+        subject: subject,
+        status: status
+    });
+
+    saveData();
+    display();
+}
+
+
+function resetSubject(subject) {
+
+    if (
+        confirm(
+            "Reset attendance for " +
+            subject +
+            "?"
+        )
+    ) {
+
+        data[subject] = {
+            present: 0,
+            absent: 0
+        };
+
+        saveData();
+        display();
+    }
+}
+
+
+function deleteSubject(subject) {
+
+    if (
+        confirm(
+            "Delete " +
+            subject +
+            "?"
+        )
+    ) {
+
+        delete data[subject];
+
+        saveData();
+        display();
+    }
+}
+
+
+function getPercentage(subject) {
+
+    let total =
+        data[subject].present +
+        data[subject].absent;
+
+    if (total === 0)
+        return 0;
+
+    return Math.round(
+        (data[subject].present / total) * 100
+    );
+}
+
+
+function display() {
+
+    let container =
+        document.getElementById("subjects");
+
+    container.innerHTML = "";
+
+    let total = 0;
+    let present = 0;
+
+    Object.keys(data).forEach(subject => {
+
+        let p = data[subject].present;
+        let a = data[subject].absent;
+
+        let classes = p + a;
+
+        let percentage =
+            getPercentage(subject);
+
+        total += classes;
+        present += p;
+
+        let barColor =
+            percentage >= 75
+                ? "#27ae60"
+                : "#e74c3c";
+
+        let div =
+            document.createElement("div");
+
+        div.className = "subject";
+
+        div.innerHTML = `
+
+            <div class="subject-top">
+
+                <h2>${subject}</h2>
+
+                <span
+                    class="percentage"
+                    style="color:${barColor}"
+                >
+                    ${percentage}%
+                </span>
+
+            </div>
+
+            <div class="progress">
+
+                <div
+                    class="progress-bar"
+                    style="
+                    width:${percentage}%;
+                    background:${barColor};
+                    "
+                ></div>
+
+            </div>
+
+            <div class="stats">
+
+                <span>✅ Present: ${p}</span>
+
+                <span>❌ Absent: ${a}</span>
+
+                <span>📚 Total: ${classes}</span>
+
+            </div>
+
+            <div class="buttons">
+
+                <button
+                    class="present"
+                    onclick="markAttendance('${subject}','present')"
+                >
+                    ✅ Present
+                </button>
+
+                <button
+                    class="absent"
+                    onclick="markAttendance('${subject}','absent')"
+                >
+                    ❌ Absent
+                </button>
+
+                <button
+                    class="reset"
+                    onclick="resetSubject('${subject}')"
+                >
+                    🔄 Reset
+                </button>
+
+                <button
+                    onclick="deleteSubject('${subject}')"
+                >
+                    🗑️
+                </button>
+
+            </div>
+        `;
+
+        container.appendChild(div);
+
+    });
+
+    let overall =
+        total === 0
+            ? 0
+            : Math.round((present / total) * 100);
+
+    document.getElementById("totalClasses")
+        .innerText = total;
+
+    document.getElementById("totalPresent")
+        .innerText = present;
+
+    document.getElementById("overall")
+        .innerText = overall + "%";
+
+    displayHistory();
+}
+
+
+function displayHistory() {
+
+    let history =
+        document.getElementById("history");
+
+    if (historyData.length === 0) {
+
+        history.innerHTML =
+            "<p>No attendance recorded yet.</p>";
+
+        return;
+    }
+
+    history.innerHTML = "";
+
+    historyData
+        .slice(0, 30)
+        .forEach(item => {
+
+            let icon =
+                item.status === "present"
+                    ? "✅"
+                    : "❌";
+
+            let div =
+                document.createElement("div");
+
+            div.className =
+                "history-item";
+
+            div.innerHTML =
+                `${icon} <b>${item.subject}</b>
+                — ${item.status.toUpperCase()}
+                — ${item.date}`;
+
+            history.appendChild(div);
+
+        });
+}
+
+
+display();
+
+</script>
+
+</body>
+</html>
