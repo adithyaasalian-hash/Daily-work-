@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Object Detector</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #111827, #1e293b);
+        color: white;
+        text-align: center;
+    }
+
+    h1 {
+        margin: 20px 0 5px;
+        font-size: 30px;
+    }
+
+    .status {
+        color: #a5f3fc;
+        margin-bottom: 15px;
+    }
+
+    #container {
+        position: relative;
+        width: 95%;
+        max-width: 800px;
+        margin: auto;
+        background: #000;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    }
+
+    video {
+        width: 100%;
+        display: block;
+    }
+
+    canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    button {
+        border: none;
+        border-radius: 12px;
+        padding: 13px 22px;
+        margin: 15px 5px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        background: #06b6d4;
+        color: white;
+    }
+
+    button:hover {
+        background: #0891b2;
+    }
+
+    #stopBtn {
+        background: #ef4444;
+    }
+
+    .info {
+        margin: 10px auto 25px;
+        width: 90%;
+        max-width: 700px;
+        padding: 15px;
+        border-radius: 15px;
+        background: rgba(255,255,255,.08);
+    }
+
+    #objects {
+        font-size: 18px;
+        line-height: 1.8;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>🤖 AI Object Detector</h1>
+<div class="status" id="status">Loading AI model...</div>
+
+<div id="container">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="canvas"></canvas>
+</div>
+
+<div>
+    <button onclick="startCamera()">📷 Start Camera</button>
+    <button id="stopBtn" onclick="stopCamera()">⛔ Stop</button>
+</div>
+
+<div class="info">
+    <h3>Detected Objects</h3>
+    <div id="objects">No objects detected</div>
+</div>
+
+<script>
+
+let model;
+let stream = null;
+let detecting = false;
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const statusText = document.getElementById("status");
+const objectsText = document.getElementById("objects");
+
+// Load AI model
+async function loadModel() {
+    try {
+        model = await cocoSsd.load();
+
+        statusText.innerHTML =
+            "✅ AI model loaded — ready to detect objects";
+
+    } catch (error) {
+        statusText.innerHTML =
+            "❌ Failed to load AI model";
+        console.error(error);
+    }
+}
+
+loadModel();
+
+
+// Start camera
+async function startCamera() {
+
+    if (!model) {
+        alert("Please wait for the AI model to finish loading.");
+        return;
+    }
+
+    try {
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "environment"
+            },
+            audio: false
+        });
+
+        video.srcObject = stream;
+
+        detecting = true;
+
+        statusText.innerHTML = "🟢 Camera active — detecting objects...";
+
+        video.onloadedmetadata = () => {
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            detectObjects();
+        };
+
+    } catch (error) {
+
+        console.error(error);
+
+        statusText.innerHTML =
+            "❌ Camera permission denied";
+
+        alert(
+            "Please allow camera permission and try again."
+        );
+    }
+}
+
+
+// Stop camera
+function stopCamera() {
+
+    detecting = false;
+
+    if (stream) {
+
+        stream.getTracks().forEach(track => {
+            track.stop();
+        });
+
+        stream = null;
+    }
+
+    video.srcObject = null;
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    objectsText.innerHTML =
+        "Camera stopped";
+
+    statusText.innerHTML =
+        "🔴 Camera stopped";
+}
+
+
+// Detect objects
+async function detectObjects() {
+
+    if (!detecting) return;
+
+    try {
+
+        const predictions =
+            await model.detect(video);
+
+        drawPredictions(predictions);
+
+    } catch (error) {
+
+        console.error(error);
+    }
+
+    if (detecting) {
+        requestAnimationFrame(detectObjects);
+    }
+}
+
+
+// Draw bounding boxes
+function drawPredictions(predictions) {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    let detectedList = [];
+
+    predictions.forEach(prediction => {
+
+        const [
+            x,
+            y,
+            width,
+            height
+        ] = prediction.bbox;
+
+        const confidence =
+            Math.round(prediction.score * 100);
+
+        // Bounding box
+        ctx.strokeStyle = "#00ff88";
+        ctx.lineWidth = 4;
+
+        ctx.strokeRect(
+            x,
+            y,
+            width,
+            height
+        );
+
+        // Label background
+        ctx.fillStyle = "#00ff88";
+
+        const label =
+            `${prediction.class} ${confidence}%`;
+
+        const textWidth =
+            ctx.measureText(label).width + 12;
+
+        ctx.fillRect(
+            x,
+            Math.max(0, y - 30),
+            textWidth,
+            30
+        );
+
+        // Label text
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 16px Arial";
+
+        ctx.fillText(
+            label,
+            x + 6,
+            Math.max(20, y - 9)
+        );
+
+        detectedList.push(
+            `🔹 ${prediction.class} — ${confidence}%`
+        );
+    });
+
+    if (detectedList.length > 0) {
+
+        objectsText.innerHTML =
+            detectedList.join("<br>");
+
+    } else {
+
+        objectsText.innerHTML =
+            "🔍 No objects detected";
+    }
+}
+
+</script>
+
+</body>
+</html>
