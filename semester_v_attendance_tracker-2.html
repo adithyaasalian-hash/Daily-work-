@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semester V Attendance Tracker</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--text:#172033;--muted:#667085;--primary:#3157d5;--green:#16a34a;--red:#dc2626;--orange:#ea8a00;--border:#e4e7ec}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{background:linear-gradient(135deg,#172554,#3157d5);color:#fff;padding:24px 16px;text-align:center}
+header h1{margin:0 0 7px;font-size:26px} header p{margin:0;opacity:.9}
+.container{max-width:1150px;margin:auto;padding:16px}
+.toolbar,.panel,.subject,.history{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 3px 12px #0000000b}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,select{padding:10px 12px;border:1px solid #cfd4dc;border-radius:9px;background:#fff;font-size:15px}
+button{border:0;border-radius:9px;padding:10px 13px;font-weight:700;cursor:pointer}
+button:hover{opacity:.88}.primary{background:var(--primary);color:#fff}.green{background:var(--green);color:#fff}.red{background:var(--red);color:#fff}.dark{background:#344054;color:#fff}.orange{background:var(--orange);color:#fff}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:15px;text-align:center}.stat small{color:var(--muted)}.stat strong{display:block;font-size:26px;margin-top:6px}
+.daytitle{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.daytitle h2{margin:0}
+.period{display:grid;grid-template-columns:125px 1fr 110px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #eee}.period:last-child{border-bottom:0}
+.period-time{font-weight:700}.period-subject{font-weight:700}.period-subject small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+.actions{display:flex;gap:7px;justify-content:flex-end}.actions button{padding:8px 10px}
+.subject-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.subject h3{margin:0}.pct{font-size:20px;font-weight:800}.bar{height:9px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:10px 0}.fill{height:100%;border-radius:99px}
+.subject-meta{display:flex;gap:15px;color:var(--muted);font-size:14px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.notice{padding:10px 12px;border-radius:10px;background:#fff7ed;color:#9a5b00;margin-top:10px}
+.history-row{padding:9px 0;border-bottom:1px solid #eee;font-size:14px}.history-row:last-child{border:0}
+.badge{display:inline-block;padding:3px 7px;border-radius:20px;font-size:12px;font-weight:700}.bgreen{background:#dcfce7;color:#166534}.bred{background:#fee2e2;color:#991b1b}.bblue{background:#dbeafe;color:#1e40af}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}.modal.show{display:flex}.modalbox{background:#fff;border-radius:16px;padding:20px;width:min(560px,100%);max-height:90vh;overflow:auto}.modalbox h2{margin-top:0}.form{display:grid;gap:10px}.form label{font-weight:700;font-size:14px}.form input,.form select{width:100%}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+@media(max-width:750px){.summary{grid-template-columns:repeat(2,1fr)}.period{grid-template-columns:1fr}.actions{justify-content:flex-start}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>📚 Semester V Attendance Tracker</h1>
+<p>Section A • Scheme 2022 • Academic Year 2026–27</p>
+</header>
+
+<div class="container">
+<div class="toolbar">
+<label><b>Select date:</b></label>
+<input type="date" id="datePicker">
+<button class="primary" onclick="showSelectedDay()">Show Classes</button>
+<button class="orange" onclick="openChangeModal()">➕ Extra / Exchange</button>
+<button class="dark" onclick="exportData()">💾 Export Backup</button>
+<button class="dark" onclick="document.getElementById('importFile').click()">📥 Import Backup</button>
+<input id="importFile" type="file" accept=".json" style="display:none" onchange="importData(event)">
+<button class="red" onclick="resetAll()">Reset All</button>
+</div>
+
+<div id="calendarNote"></div>
+
+<div class="summary">
+<div class="stat"><small>Total Classes</small><strong id="totalClasses">0</strong></div>
+<div class="stat"><small>Total Present</small><strong id="totalPresent">0</strong></div>
+<div class="stat"><small>Total Absent</small><strong id="totalAbsent">0</strong></div>
+<div class="stat"><small>Overall Attendance</small><strong id="overall">0%</strong></div>
+</div>
+
+<div class="panel">
+<div class="daytitle"><h2 id="dayHeading">Today's Classes</h2><span id="dayType"></span></div>
+<div id="dayClasses"></div>
+</div>
+
+<div class="panel">
+<h2>📊 Subject Attendance</h2>
+<div id="subjects" class="grid"></div>
+</div>
+
+<div class="history">
+<h2>📜 Recent Attendance History</h2>
+<div id="history"></div>
+</div>
+</div>
+
+<div class="modal" id="changeModal">
+<div class="modalbox">
+<h2>➕ Extra / Exchange Class</h2>
+<div class="form">
+<label>Date</label><input type="date" id="changeDate">
+<label>Time</label><select id="changeTime"></select>
+<label>Type</label><select id="changeType" onchange="toggleNormalSubject()">
+<option value="extra">Extra Class</option><option value="exchange">Exchange / Substitute</option>
+<option value="cancel">Cancelled Class</option>
+</select>
+<label>Subject</label><select id="changeSubject"></select>
+<label id="originalLabel" style="display:none">Original timetable subject</label>
+<select id="originalSubject" style="display:none"></select>
+</div>
+<div class="modal-actions">
+<button class="dark" onclick="closeChangeModal()">Cancel</button>
+<button class="primary" onclick="saveChange()">Save Change</button>
+</div>
+</div>
+</div>
+
+<script>
+const subjects = {
+  BCS501:"Software Engineering & Project Management",
+  BCS502:"Computer Networks",
+  BCS503:"Theory of Computation",
+  BCSL504:"Web Technology Lab",
+  BCS515B:"Artificial Intelligence",
+  BRMK557:"Research Methodology and IPR",
+  BCS508:"Environmental Studies",
+  BCS586:"Mini Project",
+  BNSK559:"National Service Scheme",
+  "Placement Training Lab":"Placement Training Lab"
+};
+
+const periods = [
+ ["09:00","09:55"],["09:55","10:50"],["11:10","12:05"],["12:05","13:00"],
+ ["13:55","14:50"],["15:00","15:55"],["15:55","16:45"]
+];
+
+const timetable = {
+ Monday:[
+  ["09:00-10:50","Placement Training Lab"],["11:10-12:05","BCS501"],["12:05-13:00","BCS515B"],
+  ["13:55-14:50","BCS503"],["15:00-16:45","BCS586"]
+ ],
+ Tuesday:[
+  ["09:00-09:55","BCS515B"],["09:55-10:50","BCS508"],["11:10-12:05","BCS502"],
+  ["12:05-13:00","BCS503"],["13:55-14:50","BCS501"],["15:00-16:45","BNSK559"]
+ ],
+ Wednesday:[
+  ["09:00-09:55","BCS502"],["09:55-10:50","BCS515B"],["11:10-12:05","BCS503"],
+  ["12:05-13:00","BRMK557"],["13:55-15:00","BCS586"],["15:00-15:55","TUTORIAL"]
+ ],
+ Thursday:[
+  ["09:00-09:55","BRMK557"],["09:55-10:50","BCS502"],["11:10-13:00","Placement Training Lab"],
+  ["13:55-14:50","BCS503"],["15:00-16:45","BCS502 Lab"]
+ ],
+ Friday:[
+  ["09:00-10:50","BCSL504 Lab"],["11:10-12:05","BCS502"],["12:05-13:00","BCS503"],
+  ["13:55-14:50","BRMK557"],["15:00-15:55","BCS501"],["15:55-16:45","BCS508"]
+ ],
+ Saturday:[
+  ["09:00-09:55","REGULAR CLASS"],["09:55-10:50","REGULAR CLASS"],
+  ["11:10-12:05","REGULAR CLASS"],["12:05-13:00","MMM / Mentor Mentee Meeting"]
+ ]
+};
+
+// Academic-calendar timetable overrides from the supplied calendar.
+const overrides = {
+ "2026-10-10":"Tuesday","2026-10-17":"Monday","2026-10-24":"Wednesday","2026-10-31":"Thursday",
+ "2026-11-09":"Monday","2026-11-14":"Friday","2026-11-27":"Monday",
+ "2026-12-12":"Tuesday","2026-12-26":"Wednesday"
+};
+
+// Holidays / no-class dates visible in the supplied calendar.
+const holidays = {
+ "2026-10-02":"Gandhi Jayanthi","2026-10-03":"Graduation Day","2026-10-04":"Sunday",
+ "2026-10-11":"Sunday","2026-10-18":"Sunday","2026-10-20":"Maha Navami","2026-10-21":"Dussehra / Vijayadashami",
+ "2026-10-25":"Sunday","2026-11-01":"Kannada Rajyotsava / Annual Divine Function","2026-11-08":"Sunday",
+ "2026-11-10":"Deepavali","2026-11-15":"Sunday","2026-11-21":"Saturday","2026-11-22":"Sunday",
+ "2026-11-29":"Sunday","2026-12-06":"Sunday","2026-12-13":"Sunday","2026-12-20":"Sunday","2026-12-25":"Christmas",
+ "2026-12-27":"Sunday"
+};
+
+let state = JSON.parse(localStorage.getItem("vtuAttendance2026")) || {
+  records: [],
+  changes: [],
+  initialized:false
+};
+
+// Preserve the earlier requested baseline: 4 additional absences per tracked subject.
+// It is applied only on first use and remains editable through normal records.
+if(!state.initialized){
+  Object.keys(subjects).forEach(s=>{
+    if(!["TUTORIAL","REGULAR CLASS","MMM / Mentor Mentee Meeting","BCS502 Lab","BCSL504 Lab"].includes(s)){
+      for(let i=0;i<4;i++) state.records.push({date:"BASELINE",subject:s,status:"absent",kind:"baseline"});
+    }
+  });
+  state.initialized=true;
+  save();
+}
+
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("vtuAttendance2026",JSON.stringify(state));}
+
+function fmtDate(d){
+  return d.toISOString().slice(0,10);
+}
+function selectedDate(){return $("datePicker").value;}
+function dayName(date){
+  return new Date(date+"T12:00:00").toLocaleDateString("en-IN",{weekday:"long"});
+}
+function effectiveDay(date){return overrides[date] || dayName(date);}
+function subjectName(s){return subjects[s] || s;}
+
+function getClasses(date){
+  if(holidays[date] && !overrides[date]) return [];
+  let day=effectiveDay(date);
+  let base=(timetable[day]||[]).map(x=>({time:x[0],subject:x[1],kind:"normal"}));
+  state.changes.filter(x=>x.date===date).forEach(ch=>{
+    if(ch.kind==="cancel"){
+      base=base.filter(x=>x.time!==ch.time);
+    }else if(ch.kind==="exchange"){
+      base=base.filter(x=>x.time!==ch.time);
+      base.push({time:ch.time,subject:ch.subject,kind:"exchange",original:ch.original});
+    }else if(ch.kind==="extra"){
+      base.push({time:ch.time,subject:ch.subject,kind:"extra"});
+    }
+  });
+  return base;
+}
+
+function statusFor(date,time,subject){
+  return state.records.find(r=>r.date===date && r.time===time && r.subject===subject && r.kind!=="baseline");
+}
+function mark(date,time,subject,status,kind="normal"){
+  state.records=state.records.filter(r=>!(r.date===date && r.time===time && r.subject===subject && r.kind!=="baseline"));
+  state.records.push({date,time,subject,status,kind});
+  save(); render();
+}
+
+function render(){
+  const date=selectedDate();
+  $("dayHeading").textContent = new Date(date+"T12:00:00").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  let day=effectiveDay(date);
+  $("dayType").innerHTML = overrides[date] ? '<span class="badge bblue">Special timetable: '+day+'</span>' :
+    holidays[date] ? '<span class="badge bred">'+holidays[date]+'</span>' :
+    '<span class="badge bgreen">'+day+' timetable</span>';
+
+  if(holidays[date] && !overrides[date]){
+    $("dayClasses").innerHTML='<div class="notice">No regular classes — '+holidays[date]+'.</div>';
+  }else{
+    let cls=getClasses(date);
+    $("dayClasses").innerHTML=cls.map((c,i)=>{
+      let label=subjectName(c.subject);
+      let rec=statusFor(date,c.time,c.subject);
+      let buttons = (c.subject==="TUTORIAL"||c.subject==="MMM / Mentor Mentee Meeting") ?
+        `<span class="badge bblue">Activity</span>` :
+        c.subject==="REGULAR CLASS" ?
+        `<select onchange="markRegular('${date}','${c.time}',this.value)">
+          <option value="">Choose subject</option>
+          ${Object.keys(subjects).map(s=>`<option value="${esc(s)}">${esc(subjects[s])}</option>`).join("")}
+        </select>` :
+        `<div class="actions">
+          <button class="green" onclick="mark('${date}','${c.time}','${esc(c.subject)}','present','${c.kind}')">✅ Present</button>
+          <button class="red" onclick="mark('${date}','${c.time}','${esc(c.subject)}','absent','${c.kind}')">❌ Absent</button>
+        </div>`;
+      return `<div class="period">
+        <div class="period-time">${c.time}</div>
+        <div class="period-subject">${label}<small>${c.kind}${c.original?` • replaced ${subjectName(c.original)}`:""}</small></div>
+        <div>${rec?`<span class="badge ${rec.status==="present"?"bgreen":"bred"}">${rec.status.toUpperCase()}</span>`:buttons}</div>
+      </div>`;
+    }).join("") || '<div class="notice">No classes scheduled.</div>';
+  }
+
+  renderSubjects();
+  renderHistory();
+}
+
+function markRegular(date,time,subject){
+  if(!subject)return;
+  mark(date,time,subject,"present","regular-saturday");
+}
+
+function renderSubjects(){
+  const counts={};
+  Object.keys(subjects).forEach(s=>counts[s]={p:0,a:0});
+  state.records.forEach(r=>{
+    if(!counts[r.subject])return;
+    if(r.status==="present")counts[r.subject].p++;
+    if(r.status==="absent")counts[r.subject].a++;
+  });
+  let total=0,present=0,absent=0;
+  $("subjects").innerHTML=Object.keys(subjects).map(s=>{
+    let c=counts[s], t=c.p+c.a, pct=t?Math.round(c.p/t*100):0;
+    total+=t;present+=c.p;absent+=c.a;
+    let fill=pct>=75?"#16a34a":"#dc2626";
+    return `<div class="subject">
+      <div class="subject-head"><h3>${subjectName(s)}</h3><span class="pct">${pct}%</span></div>
+      <div class="bar"><div class="fill" style="width:${pct}%;background:${fill}"></div></div>
+      <div class="subject-meta"><span>Present: ${c.p}</span><span>Absent: ${c.a}</span><span>Total: ${t}</span></div>
+      ${pct<75&&t?`<div class="notice">⚠️ Below 75%</div>`:""}
+    </div>`;
+  }).join("");
+  $("totalClasses").textContent=total;
+  $("totalPresent").textContent=present;
+  $("totalAbsent").textContent=absent;
+  $("overall").textContent=(total?Math.round(present/total*100):0)+"%";
+}
+
+function renderHistory(){
+  let rows=state.records.filter(r=>r.kind!=="baseline").slice().reverse().slice(0,50);
+  $("history").innerHTML=rows.length?rows.map(r=>
+    `<div class="history-row"><span class="badge ${r.status==="present"?"bgreen":"bred"}">${r.status}</span>
+    <b>${subjectName(r.subject)}</b> — ${r.date} ${r.time||""} <span style="color:#667085">(${r.kind})</span></div>`
+  ).join(""):"No attendance recorded yet.";
+}
+
+function esc(s){return s.replaceAll("'","&#39;").replaceAll('"',"&quot;");}
+
+function openChangeModal(){
+  $("changeDate").value=selectedDate();
+  $("changeTime").innerHTML=periods.map(p=>`<option value="${p[0]}-${p[1]}">${p[0]}–${p[1]}</option>`).join("");
+  $("changeSubject").innerHTML=Object.keys(subjects).map(s=>`<option value="${esc(s)}">${esc(subjects[s])}</option>`).join("");
+  $("originalSubject").innerHTML=Object.keys(subjects).map(s=>`<option value="${esc(s)}">${esc(subjects[s])}</option>`).join("");
+  $("changeModal").classList.add("show");toggleNormalSubject();
+}
+function closeChangeModal(){$("changeModal").classList.remove("show")}
+function toggleNormalSubject(){
+  let ex=$("changeType").value==="exchange";
+  $("originalLabel").style.display=ex?"block":"none";
+  $("originalSubject").style.display=ex?"block":"none";
+}
+function saveChange(){
+  let type=$("changeType").value,date=$("changeDate").value,time=$("changeTime").value,subject=$("changeSubject").value;
+  if(!date)return alert("Select a date.");
+  state.changes=state.changes.filter(x=>!(x.date===date&&x.time===time));
+  state.changes.push({date,time,subject,kind:type,original:type==="exchange"?$("originalSubject").value:""});
+  save();closeChangeModal();$("datePicker").value=date;render();
+}
+function showSelectedDay(){render()}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="attendance-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{try{
+    const incoming=JSON.parse(reader.result);
+    if(!incoming.records||!incoming.changes)throw new Error();
+    state=incoming;save();render();alert("Backup restored successfully.");
+  }catch{alert("Invalid attendance backup file.");}};
+  reader.readAsText(file);e.target.value="";
+}
+function resetAll(){
+  if(!confirm("This will delete all attendance records and changes. Continue?"))return;
+  localStorage.removeItem("vtuAttendance2026");location.reload();
+}
+
+// Today is preselected; for dates outside the supplied academic calendar, normal weekday timetable is used.
+$("datePicker").value=fmtDate(new Date());
+render();
+</script>
+</body>
+</html>
