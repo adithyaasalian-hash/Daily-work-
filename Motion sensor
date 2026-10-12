@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motion Sensor Dashboard</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #101828, #172554, #0f172a);
+    color: white;
+    padding: 18px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    font-size: 28px;
+    margin: 10px 0 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #aeb8ca;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(12px);
+}
+
+.main-step {
+    text-align: center;
+}
+
+.step-number {
+    font-size: 65px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.step-label {
+    color: #b8c1d1;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.stat {
+    background: rgba(255,255,255,0.07);
+    padding: 15px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 25px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.stat-label {
+    color: #aeb8ca;
+    font-size: 13px;
+}
+
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.sensor {
+    background: rgba(255,255,255,0.07);
+    padding: 14px 5px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.sensor b {
+    display: block;
+    font-size: 18px;
+    margin-top: 7px;
+}
+
+.sensor small {
+    color: #9ca8bb;
+}
+
+button {
+    width: 100%;
+    border: none;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.start {
+    background: #22c55e;
+    color: white;
+}
+
+.reset {
+    background: #ef4444;
+    color: white;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    border-radius: 12px;
+    border: none;
+    margin-top: 8px;
+    font-size: 16px;
+}
+
+.progress {
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #22c55e;
+    transition: width 0.3s;
+}
+
+.status {
+    text-align: center;
+    margin-top: 12px;
+    color: #9ca8bb;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📱 Motion Tracker</h1>
+<p class="subtitle">Steps • Distance • Motion • Speed</p>
+
+<div class="card main-step">
+
+    <div class="step-label">STEPS</div>
+
+    <div class="step-number" id="steps">0</div>
+
+    <div class="stats">
+
+        <div class="stat">
+            <div class="stat-label">DISTANCE</div>
+            <div class="stat-value">
+                <span id="distance">0.00</span> km
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">SPEED</div>
+            <div class="stat-value">
+                <span id="speed">0.00</span> km/h
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+<h3>👣 Step Settings</h3>
+
+<label>Stride Length (cm)</label>
+
+<input
+    type="number"
+    id="stride"
+    value="75"
+    min="20"
+    max="200"
+>
+
+<label style="display:block;margin-top:12px;">
+Daily Step Goal
+</label>
+
+<input
+    type="number"
+    id="goal"
+    value="5000"
+    min="100"
+>
+
+<div class="progress">
+    <div class="progress-bar" id="progress"></div>
+</div>
+
+<p class="status">
+    <span id="goalText">0 / 5000 steps</span>
+</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>📡 Accelerometer</h3>
+
+<br>
+
+<div class="sensor-grid">
+
+<div class="sensor">
+<small>X</small>
+<b id="ax">0.00</b>
+</div>
+
+<div class="sensor">
+<small>Y</small>
+<b id="ay">0.00</b>
+</div>
+
+<div class="sensor">
+<small>Z</small>
+<b id="az">0.00</b>
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>🔄 Gyroscope</h3>
+
+<br>
+
+<div class="sensor-grid">
+
+<div class="sensor">
+<small>Alpha</small>
+<b id="alpha">0.00</b>
+</div>
+
+<div class="sensor">
+<small>Beta</small>
+<b id="beta">0.00</b>
+</div>
+
+<div class="sensor">
+<small>Gamma</small>
+<b id="gamma">0.00</b>
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<button class="start" onclick="startSensors()">
+🚀 Enable Sensors
+</button>
+
+<button class="reset" onclick="resetTracker()">
+🔄 Reset Tracker
+</button>
+
+<div class="status" id="status">
+Sensors not started
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let steps = 0;
+let lastMagnitude = 0;
+let lastStepTime = 0;
+let startTime = null;
+let running = false;
+
+
+/* =========================
+   START SENSOR
+========================= */
+
+async function startSensors() {
+
+    try {
+
+        if (
+            typeof DeviceMotionEvent !== "undefined" &&
+            typeof DeviceMotionEvent.requestPermission === "function"
+        ) {
+
+            const permission =
+                await DeviceMotionEvent.requestPermission();
+
+            if (permission !== "granted") {
+
+                document.getElementById("status").innerText =
+                    "Motion permission denied.";
+
+                return;
+            }
+        }
+
+        window.addEventListener(
+            "devicemotion",
+            handleMotion
+        );
+
+        window.addEventListener(
+            "deviceorientation",
+            handleOrientation
+        );
+
+        running = true;
+
+        if (!startTime) {
+            startTime = Date.now();
+        }
+
+        document.getElementById("status").innerText =
+            "🟢 Sensors running";
+
+    } catch (error) {
+
+        document.getElementById("status").innerText =
+            "Sensor error: " + error.message;
+    }
+}
+
+
+/* =========================
+   MOTION SENSOR
+========================= */
+
+function handleMotion(event) {
+
+    if (!running) return;
+
+    let x = event.accelerationIncludingGravity?.x || 0;
+    let y = event.accelerationIncludingGravity?.y || 0;
+    let z = event.accelerationIncludingGravity?.z || 0;
+
+    document.getElementById("ax").innerText =
+        x.toFixed(2);
+
+    document.getElementById("ay").innerText =
+        y.toFixed(2);
+
+    document.getElementById("az").innerText =
+        z.toFixed(2);
+
+
+    /*
+       Calculate total movement
+    */
+
+    let magnitude =
+        Math.sqrt(
+            x*x +
+            y*y +
+            z*z
+        );
+
+
+    /*
+       Difference from previous movement
+    */
+
+    let difference =
+        Math.abs(magnitude - lastMagnitude);
+
+
+    let now = Date.now();
+
+
+    /*
+       Simple step detection.
+
+       This is an estimation, not
+       the phone's hardware pedometer.
+    */
+
+    if (
+        difference > 1.5 &&
+        now - lastStepTime > 350
+    ) {
+
+        steps++;
+
+        lastStepTime = now;
+
+        updateDisplay();
+    }
+
+
+    lastMagnitude = magnitude;
+
+}
+
+
+/* =========================
+   GYROSCOPE / ORIENTATION
+========================= */
+
+function handleOrientation(event) {
+
+    document.getElementById("alpha").innerText =
+        (event.alpha || 0).toFixed(2);
+
+    document.getElementById("beta").innerText =
+        (event.beta || 0).toFixed(2);
+
+    document.getElementById("gamma").innerText =
+        (event.gamma || 0).toFixed(2);
+
+}
+
+
+/* =========================
+   UPDATE DISPLAY
+========================= */
+
+function updateDisplay() {
+
+    document.getElementById("steps").innerText =
+        steps;
+
+
+    /*
+       Distance calculation
+    */
+
+    let stride =
+        parseFloat(
+            document.getElementById("stride").value
+        ) || 75;
+
+
+    let distanceKm =
+        (steps * stride) / 100000;
+
+
+    document.getElementById("distance").innerText =
+        distanceKm.toFixed(2);
+
+
+    /*
+       Goal
+    */
+
+    let goal =
+        parseInt(
+            document.getElementById("goal").value
+        ) || 5000;
+
+
+    let percentage =
+        Math.min(
+            (steps / goal) * 100,
+            100
+        );
+
+
+    document.getElementById("progress").style.width =
+        percentage + "%";
+
+
+    document.getElementById("goalText").innerText =
+        steps + " / " + goal + " steps";
+
+
+    /*
+       Speed
+    */
+
+    if (startTime) {
+
+        let elapsed =
+            (Date.now() - startTime) / 3600000;
+
+        if (elapsed > 0) {
+
+            let speed =
+                distanceKm / elapsed;
+
+            document.getElementById("speed").innerText =
+                speed.toFixed(2);
+        }
+    }
+
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetTracker() {
+
+    steps = 0;
+
+    lastMagnitude = 0;
+
+    lastStepTime = 0;
+
+    startTime = Date.now();
+
+    updateDisplay();
+
+    document.getElementById("status").innerText =
+        "Tracker reset";
+
+}
+
+</script>
+
+</body>
+</html>
