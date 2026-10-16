@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Travel Tracker</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#07111f,#102a43);
+    color:white;
+    padding:18px;
+}
+
+.app{
+    max-width:850px;
+    margin:auto;
+}
+
+header{
+    text-align:center;
+    padding:15px 0 25px;
+}
+
+header h1{font-size:30px}
+header p{color:#9fb3c8;margin-top:7px}
+
+.card{
+    background:rgba(20,38,58,.94);
+    border:1px solid #28445f;
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:18px;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.stat{
+    background:#0b1b2b;
+    border-radius:15px;
+    padding:18px;
+    text-align:center;
+}
+
+.stat .icon{font-size:25px}
+.stat h2{font-size:27px;margin-top:6px}
+.stat p{color:#8fa6bb;font-size:13px;margin-top:4px}
+
+.controls{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+button{
+    border:0;
+    border-radius:12px;
+    padding:14px 8px;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.start{background:#16a34a}
+.pause{background:#d97706}
+.stop{background:#dc2626}
+
+button:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+}
+
+.location{
+    background:#0b1b2b;
+    border-radius:12px;
+    padding:15px;
+    line-height:1.7;
+    color:#b8c9d9;
+}
+
+.ai{
+    border-left:4px solid #38bdf8;
+}
+
+.ai h2{
+    margin-bottom:10px;
+}
+
+#map{
+    height:300px;
+    border-radius:15px;
+    background:#07111f;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#71869a;
+    text-align:center;
+}
+
+.progress{
+    height:9px;
+    background:#07111f;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:12px;
+}
+
+.bar{
+    height:100%;
+    width:0%;
+    background:#38bdf8;
+    transition:.5s;
+}
+
+.status{
+    text-align:center;
+    margin-top:12px;
+    color:#9fb3c8;
+}
+
+@media(max-width:500px){
+    .dashboard{grid-template-columns:repeat(2,1fr)}
+    .controls{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <h1>🤖 AI Travel Tracker</h1>
+    <p>Track your journey using GPS</p>
+</header>
+
+<div class="card">
+
+    <div class="dashboard">
+
+        <div class="stat">
+            <div class="icon">🛣️</div>
+            <h2 id="distance">0.00</h2>
+            <p>Distance (km)</p>
+        </div>
+
+        <div class="stat">
+            <div class="icon">🚀</div>
+            <h2 id="speed">0.0</h2>
+            <p>Speed (km/h)</p>
+        </div>
+
+        <div class="stat">
+            <div class="icon">⏱️</div>
+            <h2 id="time">00:00:00</h2>
+            <p>Trip Time</p>
+        </div>
+
+        <div class="stat">
+            <div class="icon">📊</div>
+            <h2 id="average">0.0</h2>
+            <p>Average Speed</p>
+        </div>
+
+    </div>
+
+    <div class="controls">
+
+        <button class="start" id="startBtn" onclick="startTrip()">
+            ▶ START
+        </button>
+
+        <button class="pause" id="pauseBtn"
+                onclick="togglePause()" disabled>
+            ⏸ PAUSE
+        </button>
+
+        <button class="stop" id="stopBtn"
+                onclick="stopTrip()" disabled>
+            ⏹ STOP
+        </button>
+
+    </div>
+
+    <div class="status" id="status">
+        Ready to start your journey
+    </div>
+
+</div>
+
+<div class="card">
+
+    <h3>📍 Current Location</h3>
+
+    <br>
+
+    <div class="location">
+        Latitude: <span id="lat">--</span><br>
+        Longitude: <span id="lng">--</span><br>
+        GPS Accuracy: <span id="accuracy">--</span>
+    </div>
+
+</div>
+
+<div class="card">
+
+    <h3>🗺️ Journey Route</h3>
+
+    <br>
+
+    <div id="map">
+        Start your trip to record your GPS route
+    </div>
+
+</div>
+
+<div class="card ai">
+
+    <h2>🤖 AI Trip Summary</h2>
+
+    <p id="summary">
+        Your AI travel summary will appear here after the trip.
+    </p>
+
+    <div class="progress">
+        <div class="bar" id="bar"></div>
+    </div>
+
+</div>
+
+</div>
+
+<script>
+
+let watchID = null;
+
+let running = false;
+let paused = false;
+
+let startTime = null;
+let pausedTime = 0;
+let pauseStarted = null;
+
+let lastPosition = null;
+
+let totalDistance = 0;
+let totalMovingTime = 0;
+
+let timerInterval = null;
+
+let route = [];
+
+
+// --------------------------------
+// DISTANCE CALCULATION
+// --------------------------------
+
+function calculateDistance(lat1, lon1, lat2, lon2){
+
+    const R = 6371;
+
+    const dLat =
+        (lat2-lat1) * Math.PI/180;
+
+    const dLon =
+        (lon2-lon1) * Math.PI/180;
+
+    const a =
+        Math.sin(dLat/2) *
+        Math.sin(dLat/2) +
+
+        Math.cos(lat1*Math.PI/180) *
+        Math.cos(lat2*Math.PI/180) *
+
+        Math.sin(dLon/2) *
+        Math.sin(dLon/2);
+
+    const c =
+        2 * Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1-a)
+        );
+
+    return R*c;
+}
+
+
+// --------------------------------
+// START
+// --------------------------------
+
+function startTrip(){
+
+    if(!navigator.geolocation){
+
+        alert("GPS is not supported by this browser.");
+        return;
+    }
+
+    running = true;
+    paused = false;
+
+    totalDistance = 0;
+    pausedTime = 0;
+    totalMovingTime = 0;
+
+    route = [];
+    lastPosition = null;
+
+    startTime = Date.now();
+
+    document.getElementById("startBtn").disabled = true;
+    document.getElementById("pauseBtn").disabled = false;
+    document.getElementById("stopBtn").disabled = false;
+
+    document.getElementById("status").innerText =
+        "📡 GPS tracking active...";
+
+    timerInterval = setInterval(updateTimer,1000);
+
+    watchID = navigator.geolocation.watchPosition(
+
+        handlePosition,
+
+        handleError,
+
+        {
+            enableHighAccuracy:true,
+            maximumAge:1000,
+            timeout:10000
+        }
+
+    );
+
+}
+
+
+// --------------------------------
+// GPS POSITION
+// --------------------------------
+
+function handlePosition(position){
+
+    if(!running || paused) return;
+
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+
+    const accuracy = position.coords.accuracy;
+
+    const speed =
+        position.coords.speed;
+
+    document.getElementById("lat").innerText =
+        lat.toFixed(6);
+
+    document.getElementById("lng").innerText =
+        lng.toFixed(6);
+
+    document.getElementById("accuracy").innerText =
+        Math.round(accuracy) + " m";
+
+
+    if(lastPosition){
+
+        const distance =
+            calculateDistance(
+                lastPosition.lat,
+                lastPosition.lng,
+                lat,
+                lng
+            );
+
+        /*
+        Ignore tiny GPS jumps.
+        This prevents stationary GPS noise
+        from increasing distance.
+        */
+
+        if(distance > 0.005){
+
+            totalDistance += distance;
+
+            route.push({
+                lat:lat,
+                lng:lng
+            });
+
+        }
+
+    }else{
+
+        route.push({
+            lat:lat,
+            lng:lng
+        });
+
+    }
+
+
+    lastPosition = {
+        lat:lat,
+        lng:lng
+    };
+
+
+    document.getElementById("distance").innerText =
+        totalDistance.toFixed(2);
+
+
+    let currentSpeed = 0;
+
+    if(speed !== null && !isNaN(speed)){
+
+        currentSpeed =
+            speed * 3.6;
+
+    }
+
+    document.getElementById("speed").innerText =
+        currentSpeed.toFixed(1);
+
+
+    drawRoute();
+
+}
+
+
+// --------------------------------
+// TIMER
+// --------------------------------
+
+function updateTimer(){
+
+    if(!running || paused) return;
+
+    const elapsed =
+        Date.now() -
+        startTime -
+        pausedTime;
+
+    const seconds =
+        Math.floor(elapsed/1000);
+
+    document.getElementById("time").innerText =
+        formatTime(seconds);
+
+
+    if(seconds > 0){
+
+        const average =
+            totalDistance /
+            (seconds/3600);
+
+        document.getElementById("average").innerText =
+            average.toFixed(1);
+
+    }
+
+}
+
+
+function formatTime(seconds){
+
+    const h =
+        Math.floor(seconds/3600);
+
+    const m =
+        Math.floor((seconds%3600)/60);
+
+    const s =
+        seconds%60;
+
+    return String(h).padStart(2,"0") +
+        ":" +
+        String(m).padStart(2,"0") +
+        ":" +
+        String(s).padStart(2,"0");
+}
+
+
+// --------------------------------
+// PAUSE
+// --------------------------------
+
+function togglePause(){
+
+    if(!running) return;
+
+    if(!paused){
+
+        paused = true;
+
+        pauseStarted = Date.now();
+
+        document.getElementById("pauseBtn").innerText =
+            "▶ RESUME";
+
+        document.getElementById("status").innerText =
+            "⏸ Trip paused";
+
+    }else{
+
+        paused = false;
+
+        pausedTime +=
+            Date.now() - pauseStarted;
+
+        document.getElementById("pauseBtn").innerText =
+            "⏸ PAUSE";
+
+        document.getElementById("status").innerText =
+            "📡 GPS tracking active...";
+
+        lastPosition = null;
+
+    }
+
+}
+
+
+// --------------------------------
+// STOP
+// --------------------------------
+
+function stopTrip(){
+
+    if(!running) return;
+
+    running = false;
+    paused = false;
+
+    if(watchID !== null){
+
+        navigator.geolocation.clearWatch(
+            watchID
+        );
+
+        watchID = null;
+    }
+
+    clearInterval(timerInterval);
+
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("pauseBtn").disabled = true;
+    document.getElementById("stopBtn").disabled = true;
+
+    document.getElementById("pauseBtn").innerText =
+        "⏸ PAUSE";
+
+    document.getElementById("status").innerText =
+        "🏁 Trip completed";
+
+    generateSummary();
+
+}
+
+
+// --------------------------------
+// ERROR
+// --------------------------------
+
+function handleError(error){
+
+    document.getElementById("status").innerText =
+        "⚠️ GPS error: " + error.message;
+
+}
+
+
+// --------------------------------
+// ROUTE VISUAL
+// --------------------------------
+
+function drawRoute(){
+
+    const map =
+        document.getElementById("map");
+
+    if(route.length === 0){
+
+        map.innerHTML =
+            "Waiting for GPS...";
+        return;
+
+    }
+
+    const last =
+        route[route.length-1];
+
+    map.innerHTML = `
+        <div>
+            📍<br><br>
+            <b>GPS Route Tracking Active</b><br><br>
+            Points recorded: ${route.length}<br>
+            Current position:<br>
+            ${last.lat.toFixed(5)},
+            ${last.lng.toFixed(5)}
+        </div>
+    `;
+
+}
+
+
+// --------------------------------
+// AI SUMMARY
+// --------------------------------
+
+function generateSummary(){
+
+    const distance = totalDistance;
+
+    let message = "";
+
+    if(distance < 1){
+
+        message =
+            "Short journey detected. 🚶";
+
+    }else if(distance < 10){
+
+        message =
+            "Nice short-distance trip. 🚗";
+
+    }else if(distance < 50){
+
+        message =
+            "A good local journey. Keep travelling safely! 🛣️";
+
+    }else if(distance < 200){
+
+        message =
+            "That's a solid road trip! 🚗💨";
+
+    }else{
+
+        message =
+            "Long-distance journey detected! 🌍🚗";
+    }
+
+
+    const average =
+        parseFloat(
+            document.getElementById("average").innerText
+        );
+
+
+    if(average > 60){
+
+        message +=
+            " Your average speed was relatively high.";
+
+    }else if(average > 0){
+
+        message +=
+            " Your average speed was moderate.";
+    }
+
+
+    document.getElementById("summary").innerHTML =
+        `<b>🤖 AI Travel Analysis</b><br><br>
+        ${message}<br><br>
+        📏 Total distance: ${distance.toFixed(2)} km<br>
+        📊 Average speed: ${average.toFixed(1)} km/h<br>
+        📍 GPS points recorded: ${route.length}`;
+
+    document.getElementById("bar").style.width =
+        Math.min(distance,100) + "%";
+}
+
+</script>
+
+</body>
+</html>
