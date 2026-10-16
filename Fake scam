@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Scam Call Detector</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+    padding: 20px;
+}
+
+.container {
+    max-width: 850px;
+    margin: auto;
+}
+
+.header {
+    text-align: center;
+    margin: 20px 0 30px;
+}
+
+.header h1 {
+    font-size: 32px;
+}
+
+.header p {
+    color: #94a3b8;
+    margin-top: 8px;
+}
+
+.card {
+    background: rgba(30,41,59,.9);
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.3);
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+textarea {
+    width: 100%;
+    height: 180px;
+    resize: vertical;
+    border-radius: 12px;
+    border: 1px solid #475569;
+    background: #0f172a;
+    color: white;
+    padding: 15px;
+    font-size: 15px;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: #38bdf8;
+}
+
+button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #06b6d4, #3b82f6);
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+.result {
+    display: none;
+    text-align: center;
+}
+
+.score {
+    width: 150px;
+    height: 150px;
+    margin: 10px auto 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border: 10px solid #22c55e;
+}
+
+.score span {
+    font-size: 38px;
+    font-weight: bold;
+}
+
+.score small {
+    color: #94a3b8;
+}
+
+.status {
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.reason {
+    text-align: left;
+    margin-top: 20px;
+}
+
+.reason div {
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 8px;
+}
+
+.safe {
+    color: #22c55e;
+}
+
+.warning {
+    color: #facc15;
+}
+
+.danger {
+    color: #ef4444;
+}
+
+.examples {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.example {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px;
+    background: #0f172a;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid #334155;
+}
+
+.example:hover {
+    border-color: #38bdf8;
+}
+
+.footer {
+    text-align: center;
+    color: #64748b;
+    margin-top: 20px;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🤖 AI Scam Call Detector</h1>
+        <p>Analyze a call transcript and detect possible scam patterns</p>
+    </div>
+
+    <div class="card">
+
+        <label>📞 Enter Call Transcript</label>
+
+        <textarea id="transcript"
+        placeholder="Example:
+Hello sir, I am calling from your bank. Your account will be blocked today. Please tell me the OTP you received..."></textarea>
+
+        <button onclick="analyzeCall()">
+            🔍 Analyze Call
+        </button>
+
+    </div>
+
+    <div class="card result" id="result">
+
+        <div class="score" id="scoreCircle">
+            <span id="score">0%</span>
+            <small>Risk</small>
+        </div>
+
+        <div class="status" id="status">
+            SAFE
+        </div>
+
+        <p id="summary"></p>
+
+        <div class="reason">
+            <h3>🚨 Detected Indicators</h3>
+            <div id="indicators"></div>
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>🧪 Try Sample Calls</h3>
+
+        <div class="examples">
+
+            <div class="example" onclick="sample1()">
+                🏦 Fake Bank Call
+            </div>
+
+            <div class="example" onclick="sample2()">
+                👮 Fake Police Call
+            </div>
+
+            <div class="example" onclick="sample3()">
+                ✅ Normal Call
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+        ⚠️ This is a demonstration tool. It does not guarantee that a call is genuine or fraudulent.
+    </div>
+
+</div>
+
+<script>
+
+function analyzeCall() {
+
+    const text = document
+        .getElementById("transcript")
+        .value
+        .toLowerCase();
+
+    if (!text.trim()) {
+        alert("Please enter a call transcript.");
+        return;
+    }
+
+    let score = 0;
+    let indicators = [];
+
+    const patterns = [
+
+        {
+            words: ["otp", "one time password"],
+            points: 25,
+            message: "🔐 Caller requested an OTP."
+        },
+
+        {
+            words: ["upi", "upi pin", "pin"],
+            points: 20,
+            message: "💳 Possible payment/UPI credential request."
+        },
+
+        {
+            words: ["password", "cvv", "card number", "atm number"],
+            points: 25,
+            message: "💳 Sensitive banking information requested."
+        },
+
+        {
+            words: ["account will be blocked", "account blocked"],
+            points: 15,
+            message: "⚠️ Threat of account blocking detected."
+        },
+
+        {
+            words: ["urgent", "immediately", "right now", "within 10 minutes"],
+            points: 10,
+            message: "⏰ High-pressure or urgent language detected."
+        },
+
+        {
+            words: ["police", "cyber crime", "court", "arrest"],
+            points: 20,
+            message: "👮 Possible impersonation of authorities."
+        },
+
+        {
+            words: ["kyc", "kyc update", "verification"],
+            points: 15,
+            message: "🪪 Possible KYC-related scam pattern."
+        },
+
+        {
+            words: ["install app", "download app", "anydesk", "teamviewer"],
+            points: 30,
+            message: "💻 Remote-access software request detected."
+        },
+
+        {
+            words: ["send money", "transfer money", "pay now", "payment"],
+            points: 25,
+            message: "💰 Money transfer request detected."
+        },
+
+        {
+            words: ["click this link", "click the link", "http://", "https://"],
+            points: 20,
+            message: "🔗 Suspicious link or link-based request detected."
+        },
+
+        {
+            words: ["refund", "lottery", "prize", "winner"],
+            points: 15,
+            message: "🎁 Possible fake reward/refund pattern."
+        },
+
+        {
+            words: ["don't tell anyone", "do not tell anyone", "keep this secret"],
+            points: 15,
+            message: "🤫 Caller is attempting to isolate the victim."
+        }
+
+    ];
+
+    patterns.forEach(pattern => {
+
+        let found = pattern.words.some(word =>
+            text.includes(word)
+        );
+
+        if (found) {
+            score += pattern.points;
+            indicators.push(pattern.message);
+        }
+
+    });
+
+    score = Math.min(score, 100);
+
+    showResult(score, indicators);
+}
+
+
+function showResult(score, indicators) {
+
+    const result = document.getElementById("result");
+    const scoreText = document.getElementById("score");
+    const status = document.getElementById("status");
+    const summary = document.getElementById("summary");
+    const circle = document.getElementById("scoreCircle");
+    const indicatorBox = document.getElementById("indicators");
+
+    result.style.display = "block";
+
+    scoreText.innerText = score + "%";
+
+    indicatorBox.innerHTML = "";
+
+    if (indicators.length === 0) {
+
+        indicatorBox.innerHTML =
+            "<div>✅ No major scam indicators detected.</div>";
+
+    } else {
+
+        indicators.forEach(item => {
+
+            const div = document.createElement("div");
+            div.innerHTML = item;
+
+            indicatorBox.appendChild(div);
+
+        });
+
+    }
+
+    if (score >= 60) {
+
+        status.innerText = "🚨 HIGH SCAM RISK";
+        status.className = "status danger";
+        circle.style.borderColor = "#ef4444";
+
+        summary.innerText =
+            "This call contains multiple strong scam indicators. Do not share OTPs, passwords or payment information.";
+
+    } else if (score >= 30) {
+
+        status.innerText = "⚠️ SUSPICIOUS CALL";
+        status.className = "status warning";
+        circle.style.borderColor = "#facc15";
+
+        summary.innerText =
+            "Some suspicious patterns were detected. Verify the caller independently.";
+
+    } else {
+
+        status.innerText = "✅ LOW RISK";
+        status.className = "status safe";
+        circle.style.borderColor = "#22c55e";
+
+        summary.innerText =
+            "No major scam indicators were detected in this transcript.";
+
+    }
+
+    result.scrollIntoView({
+        behavior: "smooth"
+    });
+}
+
+
+function sample1() {
+
+    document.getElementById("transcript").value =
+    "Hello sir, I am calling from your bank. Your KYC is expired and your account will be blocked today. Please tell me the OTP you received. You need to transfer 5000 rupees immediately.";
+
+}
+
+function sample2() {
+
+    document.getElementById("transcript").value =
+    "This is the cyber crime police. Your Aadhaar has been linked to an illegal case. You must pay money immediately or you will be arrested. Do not tell anyone about this call.";
+
+}
+
+function sample3() {
+
+    document.getElementById("transcript").value =
+    "Hello, your appointment with the doctor is confirmed for tomorrow at 10 AM. Please arrive 15 minutes early. Thank you.";
+
+}
+
+</script>
+
+</body>
+</html>
