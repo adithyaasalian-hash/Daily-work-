@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Text Detector</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a, #172554);
+    color: white;
+    padding: 20px;
+}
+
+.container {
+    max-width: 850px;
+    margin: auto;
+}
+
+.header {
+    text-align: center;
+    padding: 25px 0;
+}
+
+.header h1 {
+    font-size: 34px;
+}
+
+.header p {
+    color: #94a3b8;
+    margin-top: 8px;
+}
+
+.card {
+    background: rgba(30, 41, 59, .95);
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 230px;
+    background: #0f172a;
+    color: white;
+    border: 1px solid #475569;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: #38bdf8;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #06b6d4, #6366f1);
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: .9;
+}
+
+.result {
+    display: none;
+    text-align: center;
+}
+
+.circle {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    margin: 10px auto 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 10px solid #22c55e;
+}
+
+.circle strong {
+    font-size: 40px;
+}
+
+.circle span {
+    color: #94a3b8;
+}
+
+.status {
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.ai {
+    color: #ef4444;
+}
+
+.human {
+    color: #22c55e;
+}
+
+.mixed {
+    color: #facc15;
+}
+
+.info {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.info div {
+    background: #0f172a;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+.counter {
+    text-align: right;
+    color: #64748b;
+    margin-top: 7px;
+    font-size: 13px;
+}
+
+.warning {
+    color: #facc15;
+    font-size: 13px;
+    margin-top: 20px;
+    line-height: 1.5;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🤖 AI Text Detector</h1>
+        <p>Analyze text for patterns commonly associated with AI-generated writing</p>
+    </div>
+
+    <div class="card">
+
+        <textarea id="text"
+        placeholder="Paste your text here..."></textarea>
+
+        <div class="counter">
+            <span id="words">0</span> words
+        </div>
+
+        <button onclick="detectAI()">
+            🔍 Detect AI Writing
+        </button>
+
+    </div>
+
+    <div class="card result" id="result">
+
+        <div class="circle" id="circle">
+            <strong id="percentage">0%</strong>
+            <span>AI probability</span>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <p id="summary"></p>
+
+        <div class="info">
+            <h3>🔎 Analysis</h3>
+            <div id="analysis"></div>
+        </div>
+
+        <p class="warning">
+            ⚠️ AI detection is probabilistic. This tool cannot reliably prove
+            that a particular person or AI system wrote the text.
+        </p>
+
+    </div>
+
+</div>
+
+<script>
+
+const textBox = document.getElementById("text");
+
+textBox.addEventListener("input", function() {
+
+    const words = this.value
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    document.getElementById("words").innerText =
+        this.value.trim() ? words.length : 0;
+
+});
+
+
+function detectAI() {
+
+    const text = textBox.value.trim();
+
+    if (!text) {
+        alert("Please enter some text first.");
+        return;
+    }
+
+    const words = text.split(/\s+/);
+    const sentences = text.split(/[.!?]+/)
+        .map(x => x.trim())
+        .filter(Boolean);
+
+    let score = 0;
+    let reasons = [];
+
+    /*
+       These are HEURISTICS only.
+       They do not actually identify an AI model.
+    */
+
+    // Very formal transition words
+    const transitions = [
+        "furthermore",
+        "moreover",
+        "additionally",
+        "in conclusion",
+        "therefore",
+        "consequently",
+        "overall",
+        "it is important to note",
+        "in today's world"
+    ];
+
+    let transitionCount = 0;
+
+    transitions.forEach(word => {
+
+        if (text.toLowerCase().includes(word)) {
+            transitionCount++;
+        }
+
+    });
+
+    if (transitionCount >= 2) {
+
+        score += 15;
+
+        reasons.push(
+            "Frequent formal transition phrases detected."
+        );
+    }
+
+
+    // Repeated sentence structures
+    let lengths = sentences.map(s =>
+        s.split(/\s+/).length
+    );
+
+    if (lengths.length >= 4) {
+
+        let average =
+            lengths.reduce((a,b) => a+b,0) / lengths.length;
+
+        let similar = lengths.filter(
+            x => Math.abs(x - average) <= 5
+        ).length;
+
+        if (similar / lengths.length > .7) {
+
+            score += 15;
+
+            reasons.push(
+                "Many sentences have similar lengths."
+            );
+        }
+    }
+
+
+    // Excessive long words
+    let longWords = words.filter(
+        w => w.replace(/[^A-Za-z]/g,"").length >= 12
+    );
+
+    if (longWords.length / words.length > .12) {
+
+        score += 10;
+
+        reasons.push(
+            "Higher-than-usual use of long/formal words."
+        );
+    }
+
+
+    // Repeated phrases
+    const normalized = text
+        .toLowerCase()
+        .replace(/[^\w\s]/g,"")
+        .split(/\s+/);
+
+    let repeated = 0;
+
+    for (let i = 0; i < normalized.length - 3; i++) {
+
+        const phrase =
+            normalized.slice(i,i+3).join(" ");
+
+        const later =
+            normalized.slice(i+1).join(" ");
+
+        if (later.includes(phrase)) {
+            repeated++;
+        }
+    }
+
+    if (repeated >= 2) {
+
+        score += 10;
+
+        reasons.push(
+            "Some phrases appear to be repeated."
+        );
+    }
+
+
+    // Very polished punctuation
+    if (
+        words.length > 100 &&
+        /;\s/.test(text) &&
+        /:\s/.test(text)
+    ) {
+
+        score += 8;
+
+        reasons.push(
+            "Highly structured punctuation detected."
+        );
+    }
+
+
+    // Extremely long text gets slightly more analysis confidence
+    if (words.length > 250) {
+
+        score += 5;
+
+        reasons.push(
+            "Long, consistently structured passage."
+        );
+    }
+
+
+    /*
+       Add small variation so identical-looking
+       results aren't always produced for borderline text.
+    */
+
+    const variation =
+        Math.floor(Math.random() * 7) - 3;
+
+    score += variation;
+
+    score = Math.max(0, Math.min(100, score));
+
+    showResult(score, reasons);
+}
+
+
+function showResult(score, reasons) {
+
+    document.getElementById("result").style.display = "block";
+
+    document.getElementById("percentage").innerText =
+        score + "%";
+
+    const circle =
+        document.getElementById("circle");
+
+    const status =
+        document.getElementById("status");
+
+    const summary =
+        document.getElementById("summary");
+
+    const analysis =
+        document.getElementById("analysis");
+
+
+    if (score >= 65) {
+
+        status.innerText =
+            "🤖 Likely AI-Assisted";
+
+        status.className =
+            "status ai";
+
+        circle.style.borderColor =
+            "#ef4444";
+
+        summary.innerText =
+            "The text contains several patterns commonly associated with AI-generated or heavily AI-assisted writing.";
+
+    }
+
+    else if (score >= 35) {
+
+        status.innerText =
+            "⚠️ Uncertain / Mixed";
+
+        status.className =
+            "status mixed";
+
+        circle.style.borderColor =
+            "#facc15";
+
+        summary.innerText =
+            "The text contains some patterns associated with AI writing, but the evidence is inconclusive.";
+
+    }
+
+    else {
+
+        status.innerText =
+            "✍️ More Human-Like";
+
+        status.className =
+            "status human";
+
+        circle.style.borderColor =
+            "#22c55e";
+
+        summary.innerText =
+            "The text does not contain many of the patterns checked by this demo.";
+
+    }
+
+
+    analysis.innerHTML = "";
+
+    if (reasons.length === 0) {
+
+        analysis.innerHTML =
+            "<div>✅ No strong AI-style indicators detected.</div>";
+
+    } else {
+
+        reasons.forEach(reason => {
+
+            const div =
+                document.createElement("div");
+
+            div.innerHTML = "• " + reason;
+
+            analysis.appendChild(div);
+
+        });
+
+    }
+
+    document.getElementById("result")
+        .scrollIntoView({
+            behavior: "smooth"
+        });
+}
+
+</script>
+
+</body>
+</html>
