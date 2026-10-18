@@ -1,0 +1,337 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sleep Cycle Calculator</title><style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #080b25, #15104a, #24115c);
+    color: white;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 650px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 5px;
+    font-size: 32px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #bbb;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 18px;
+    backdrop-filter: blur(10px);
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #ddd;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    color: white;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+option {
+    color: black;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 13px;
+    background: linear-gradient(90deg, #7c5cff, #a66cff);
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.02);
+}
+
+.result {
+    display: none;
+}
+
+.time {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.recommend {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.08);
+}
+
+.cycles {
+    color: #c9bfff;
+}
+
+.best {
+    border: 1px solid #9d85ff;
+}
+
+.badge {
+    background: #7c5cff;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+#countdown {
+    text-align: center;
+    font-size: 38px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.timeline {
+    display: flex;
+    gap: 5px;
+    margin-top: 20px;
+}
+
+.stage {
+    flex: 1;
+    height: 45px;
+    border-radius: 8px;
+    text-align: center;
+    padding-top: 14px;
+    font-size: 11px;
+}
+
+.light { background: #5865a8; }
+.deep { background: #30245f; }
+.rem { background: #8b65c7; }
+
+.info {
+    color: #aaa;
+    font-size: 13px;
+    line-height: 1.5;
+}
+</style></head><body><div class="container"><h1>🌙 Sleep Cycle</h1>
+<p class="subtitle">Wake up feeling refreshed 😴</p>
+
+<div class="card">
+
+    <label>What do you want to calculate?</label>
+
+    <select id="mode">
+        <option value="wake">I want to wake up at...</option>
+        <option value="sleep">I want to sleep at...</option>
+    </select>
+
+    <input type="time" id="time">
+
+    <label>Sleep cycles</label>
+
+    <select id="cycles">
+        <option value="4">4 cycles — 6 hours</option>
+        <option value="5" selected>5 cycles — 7.5 hours ⭐</option>
+        <option value="6">6 cycles — 9 hours</option>
+    </select>
+
+    <button onclick="calculate()">Calculate Sleep Time</button>
+
+</div>
+
+<div class="card result" id="result">
+
+    <h2>🛌 Recommended Time</h2>
+
+    <div id="recommendations"></div>
+
+</div>
+
+<div class="card">
+
+    <h2>⏱️ Sleep Timer</h2>
+
+    <div id="countdown">--:--:--</div>
+
+    <p class="info" style="text-align:center;">
+        Countdown to your selected sleep/wake time
+    </p>
+
+</div>
+
+<div class="card">
+
+    <h2>🧠 One Sleep Cycle</h2>
+
+    <p class="info">
+        A typical sleep cycle is approximately 90 minutes.
+        During the night your body moves through light sleep,
+        deep sleep and REM sleep.
+    </p>
+
+    <div class="timeline">
+        <div class="stage light">Light</div>
+        <div class="stage deep">Deep</div>
+        <div class="stage rem">REM</div>
+    </div>
+
+</div>
+
+</div><script>
+
+let targetTime = null;
+
+function calculate() {
+
+    const mode = document.getElementById("mode").value;
+    const input = document.getElementById("time").value;
+    const cycles = parseInt(document.getElementById("cycles").value);
+
+    if (!input) {
+        alert("Please select a time.");
+        return;
+    }
+
+    let [hours, minutes] = input.split(":").map(Number);
+
+    let date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+
+    const cycleMinutes = 90;
+    const sleepPreparation = 15;
+
+    let result = [];
+
+    if (mode === "wake") {
+
+        // Work backwards from wake-up time
+        for (let c = 6; c >= 4; c--) {
+
+            let sleepTime = new Date(date);
+
+            sleepTime.setMinutes(
+                sleepTime.getMinutes() -
+                (c * cycleMinutes) -
+                sleepPreparation
+            );
+
+            result.push({
+                time: formatTime(sleepTime),
+                cycles: c
+            });
+        }
+
+        targetTime = date;
+
+    } else {
+
+        // Work forwards from sleep time
+        for (let c = 4; c <= 6; c++) {
+
+            let wakeTime = new Date(date);
+
+            wakeTime.setMinutes(
+                wakeTime.getMinutes() +
+                (c * cycleMinutes)
+            );
+
+            result.push({
+                time: formatTime(wakeTime),
+                cycles: c
+            });
+        }
+
+        targetTime = date;
+    }
+
+    let html = "";
+
+    result.forEach((item, index) => {
+
+        html += `
+        <div class="recommend ${index === 1 ? "best" : ""}">
+            <div>
+                <div class="time">${item.time}</div>
+                <div class="cycles">${item.cycles} sleep cycles</div>
+            </div>
+
+            ${index === 1 ? '<span class="badge">RECOMMENDED</span>' : ''}
+        </div>
+        `;
+
+    });
+
+    document.getElementById("recommendations").innerHTML = html;
+    document.getElementById("result").style.display = "block";
+}
+
+function formatTime(date) {
+
+    return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+}
+
+function updateCountdown() {
+
+    if (!targetTime) return;
+
+    let now = new Date();
+    let difference;
+
+    if (targetTime > now) {
+        difference = targetTime - now;
+    } else {
+        difference = targetTime.getTime() + 86400000 - now.getTime();
+    }
+
+    let totalSeconds = Math.floor(difference / 1000);
+
+    let hours = Math.floor(totalSeconds / 3600);
+    let minutes = Math.floor((totalSeconds % 3600) / 60);
+    let seconds = totalSeconds % 60;
+
+    document.getElementById("countdown").textContent =
+        String(hours).padStart(2,"0") + ":" +
+        String(minutes).padStart(2,"0") + ":" +
+        String(seconds).padStart(2,"0");
+}
+
+setInterval(updateCountdown, 1000);
+
+</script></body>
+</html>
