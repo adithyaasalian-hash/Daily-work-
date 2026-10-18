@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Time Table Maker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0b1026, #24135c);
+    color: white;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #bbb;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.12);
+    color: white;
+    outline: none;
+}
+
+select option {
+    color: black;
+}
+
+button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    background: #7657ff;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+.danger {
+    background: #e74c3c;
+}
+
+.green {
+    background: #16a085;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+th {
+    background: #6d50d9;
+    padding: 14px;
+}
+
+td {
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 8px;
+    min-width: 130px;
+}
+
+.time {
+    background: rgba(255,255,255,0.08);
+    font-weight: bold;
+}
+
+.cell {
+    min-height: 70px;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 10px;
+    transition: 0.2s;
+}
+
+.cell:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.subject {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.room {
+    font-size: 11px;
+    color: #bbb;
+    margin-top: 5px;
+}
+
+.break {
+    background: rgba(255,190,70,0.15);
+    color: #ffd36a;
+    font-weight: bold;
+}
+
+.instructions {
+    color: #aaa;
+    font-size: 13px;
+}
+
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .card {
+        background: white;
+        border: none;
+    }
+
+    table {
+        color: black;
+    }
+
+    th {
+        background: #ddd;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📚 Time Table Maker</h1>
+<p class="subtitle">Create • Edit • Save • Print your weekly timetable</p>
+
+<div class="card no-print">
+
+    <h2>⚙️ Timetable Settings</h2>
+
+    <div class="controls">
+
+        <input id="periodCount"
+               type="number"
+               min="1"
+               max="12"
+               value="7"
+               placeholder="Periods">
+
+        <button onclick="createTimetable()">
+            Create Timetable
+        </button>
+
+        <button class="green" onclick="saveTable()">
+            💾 Save
+        </button>
+
+        <button onclick="loadTable()">
+            📂 Load
+        </button>
+
+        <button class="danger" onclick="clearTable()">
+            🗑 Clear
+        </button>
+
+        <button onclick="window.print()">
+            🖨 Print
+        </button>
+
+    </div>
+
+    <p class="instructions">
+        💡 Click any timetable cell to enter a subject and room/lab.
+        Double-click a cell to clear it.
+    </p>
+
+</div>
+
+<div class="card">
+
+<div class="table-container">
+
+<table id="timetable">
+
+<thead>
+<tr id="headerRow">
+<th>Time</th>
+<th>Monday</th>
+<th>Tuesday</th>
+<th>Wednesday</th>
+<th>Thursday</th>
+<th>Friday</th>
+<th>Saturday</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+];
+
+const defaultTimes = [
+    "9:00 - 10:00",
+    "10:00 - 11:00",
+    "11:00 - 12:00",
+    "12:00 - 1:00",
+    "2:00 - 3:00",
+    "3:00 - 4:00",
+    "4:00 - 5:00",
+    "5:00 - 6:00"
+];
+
+function createTimetable() {
+
+    let count =
+        parseInt(document.getElementById("periodCount").value);
+
+    if (!count || count < 1) {
+        alert("Enter a valid number of periods.");
+        return;
+    }
+
+    const body =
+        document.getElementById("tableBody");
+
+    body.innerHTML = "";
+
+    for (let i = 0; i < count; i++) {
+
+        let row = document.createElement("tr");
+
+        let time = document.createElement("td");
+
+        time.className = "time";
+
+        time.innerHTML = `
+            <input
+                value="${defaultTimes[i] || "Period " + (i + 1)}"
+                onchange="saveTable()"
+                style="font-weight:bold;text-align:center;">
+        `;
+
+        row.appendChild(time);
+
+        days.forEach(day => {
+
+            let cell = document.createElement("td");
+
+            cell.innerHTML = `
+                <div class="cell"
+                     onclick="editCell(this)"
+                     ondblclick="clearCell(this)">
+                    <div class="subject">+</div>
+                    <div class="room"></div>
+                </div>
+            `;
+
+            row.appendChild(cell);
+
+        });
+
+        body.appendChild(row);
+    }
+}
+
+
+function editCell(element) {
+
+    let subject =
+        prompt(
+            "Enter Subject / Class:",
+            element.querySelector(".subject").innerText === "+"
+            ? ""
+            : element.querySelector(".subject").innerText
+        );
+
+    if (subject === null) return;
+
+    if (subject.trim() === "") {
+
+        element.querySelector(".subject").innerText = "+";
+        element.querySelector(".room").innerText = "";
+
+        return;
+    }
+
+    let room =
+        prompt(
+            "Enter Room / Lab (optional):",
+            element.querySelector(".room").innerText
+        );
+
+    if (room === null) room = "";
+
+    element.querySelector(".subject").innerText =
+        subject;
+
+    element.querySelector(".room").innerText =
+        room;
+
+    saveTable();
+}
+
+
+function clearCell(element) {
+
+    element.querySelector(".subject").innerText = "+";
+    element.querySelector(".room").innerText = "";
+
+    saveTable();
+}
+
+
+function saveTable() {
+
+    localStorage.setItem(
+        "myTimetable",
+        document.getElementById("timetable").innerHTML
+    );
+
+    localStorage.setItem(
+        "periodCount",
+        document.getElementById("periodCount").value
+    );
+}
+
+
+function loadTable() {
+
+    let saved =
+        localStorage.getItem("myTimetable");
+
+    let count =
+        localStorage.getItem("periodCount");
+
+    if (!saved) {
+        alert("No saved timetable found.");
+        return;
+    }
+
+    document.getElementById("periodCount").value =
+        count || 7;
+
+    document.getElementById("timetable").innerHTML =
+        saved;
+}
+
+
+function clearTable() {
+
+    if (!confirm("Clear the entire timetable?")) {
+        return;
+    }
+
+    localStorage.removeItem("myTimetable");
+    localStorage.removeItem("periodCount");
+
+    createTimetable();
+}
+
+
+// Create initial timetable
+createTimetable();
+
+</script>
+
+</body>
+</html>
