@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Routine Checker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#090d25,#211052,#3a176b);
+    color: white;
+    min-height: 100vh;
+    padding: 18px;
+}
+
+.container {
+    max-width: 650px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 22px;
+}
+
+.card {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 18px;
+    backdrop-filter: blur(12px);
+}
+
+/* Progress */
+
+.progress-box {
+    text-align: center;
+}
+
+.progress-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin: 15px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(#8c6cff 0deg,#8c6cff 0deg,#333 0deg);
+}
+
+.progress-inner {
+    width: 125px;
+    height: 125px;
+    border-radius: 50%;
+    background: #17133b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+/* Streak */
+
+.stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat {
+    background: rgba(255,255,255,.08);
+    padding: 15px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.stat-label {
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* Add routine */
+
+.form {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,.12);
+    color: white;
+    outline: none;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    background: #7658ff;
+}
+
+button:hover {
+    transform: scale(1.02);
+}
+
+/* Routine list */
+
+.routine {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    margin: 10px 0;
+    background: rgba(255,255,255,.07);
+    border-radius: 14px;
+}
+
+.check {
+    width: 25px;
+    height: 25px;
+    accent-color: #8b6cff;
+    cursor: pointer;
+}
+
+.task {
+    flex: 1;
+}
+
+.task-name {
+    font-weight: bold;
+}
+
+.task-time {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+.completed {
+    text-decoration: line-through;
+    color: #777;
+}
+
+.delete {
+    background: #d64545;
+    padding: 7px 10px;
+}
+
+.empty {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+
+.reset {
+    width: 100%;
+    background: #444;
+}
+
+.date {
+    text-align: center;
+    color: #aaa;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📋 Routine Checker</h1>
+
+<p class="subtitle" id="date"></p>
+
+<!-- Progress -->
+
+<div class="card progress-box">
+
+<h2>Today's Progress</h2>
+
+<div class="progress-circle" id="progressCircle">
+    <div class="progress-inner" id="percentage">
+        0%
+    </div>
+</div>
+
+<p id="progressText">0 of 0 completed</p>
+
+</div>
+
+
+<!-- Stats -->
+
+<div class="card">
+
+<div class="stats">
+
+<div class="stat">
+    <div class="stat-number" id="streak">0 🔥</div>
+    <div class="stat-label">DAY STREAK</div>
+</div>
+
+<div class="stat">
+    <div class="stat-number" id="total">0</div>
+    <div class="stat-label">TODAY'S TASKS</div>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- Add routine -->
+
+<div class="card">
+
+<h2>➕ Add Routine</h2>
+
+<div class="form">
+
+<input
+    id="taskInput"
+    type="text"
+    placeholder="Example: Study DBMS">
+
+<input
+    id="timeInput"
+    type="time">
+
+</div>
+
+<br>
+
+<button onclick="addTask()" style="width:100%">
+    Add Routine
+</button>
+
+</div>
+
+
+<!-- Routine -->
+
+<div class="card">
+
+<h2>📅 Today's Routine</h2>
+
+<div id="routineList"></div>
+
+</div>
+
+
+<div class="card">
+
+<button class="reset" onclick="resetToday()">
+    🔄 Reset Today's Routine
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+let data = JSON.parse(
+    localStorage.getItem("routineData")
+) || {
+
+    date: getDate(),
+    tasks: [],
+    streak: 0,
+    lastCompletedDate: null
+};
+
+
+// Date
+
+function getDate() {
+
+    return new Date().toISOString().split("T")[0];
+
+}
+
+
+// Check new day
+
+function checkNewDay() {
+
+    let today = getDate();
+
+    if (data.date !== today) {
+
+        if (data.tasks.length > 0) {
+
+            let completed =
+                data.tasks.filter(t => t.done).length;
+
+            if (completed === data.tasks.length) {
+
+                data.streak++;
+
+            } else {
+
+                data.streak = 0;
+
+            }
+
+        }
+
+        data.date = today;
+
+        data.tasks = [];
+
+        save();
+
+    }
+
+}
+
+
+// Add task
+
+function addTask() {
+
+    let name =
+        document.getElementById("taskInput").value.trim();
+
+    let time =
+        document.getElementById("timeInput").value;
+
+    if (!name) {
+
+        alert("Enter a routine name.");
+
+        return;
+    }
+
+    data.tasks.push({
+
+        id: Date.now(),
+
+        name: name,
+
+        time: time,
+
+        done: false
+
+    });
+
+    document.getElementById("taskInput").value = "";
+
+    document.getElementById("timeInput").value = "";
+
+    save();
+
+    render();
+
+}
+
+
+// Toggle task
+
+function toggleTask(id) {
+
+    let task =
+        data.tasks.find(t => t.id === id);
+
+    if (task) {
+
+        task.done = !task.done;
+
+    }
+
+    save();
+
+    render();
+
+}
+
+
+// Delete
+
+function deleteTask(id) {
+
+    data.tasks =
+        data.tasks.filter(t => t.id !== id);
+
+    save();
+
+    render();
+
+}
+
+
+// Render
+
+function render() {
+
+    let list =
+        document.getElementById("routineList");
+
+    list.innerHTML = "";
+
+    if (data.tasks.length === 0) {
+
+        list.innerHTML =
+            `<div class="empty">
+                No routines added yet 😴
+            </div>`;
+
+    }
+
+    data.tasks.forEach(task => {
+
+        let div =
+            document.createElement("div");
+
+        div.className = "routine";
+
+        div.innerHTML = `
+
+            <input
+                class="check"
+                type="checkbox"
+                ${task.done ? "checked" : ""}
+                onchange="toggleTask(${task.id})">
+
+            <div class="task">
+
+                <div class="task-name ${task.done ? "completed" : ""}">
+                    ${escapeHTML(task.name)}
+                </div>
+
+                ${
+                    task.time
+                    ? `<div class="task-time">⏰ ${formatTime(task.time)}</div>`
+                    : ""
+                }
+
+            </div>
+
+            <button
+                class="delete"
+                onclick="deleteTask(${task.id})">
+                🗑
+            </button>
+        `;
+
+        list.appendChild(div);
+
+    });
+
+
+    updateProgress();
+
+    document.getElementById("streak").innerText =
+        data.streak + " 🔥";
+
+    document.getElementById("total").innerText =
+        data.tasks.length;
+
+}
+
+
+// Progress
+
+function updateProgress() {
+
+    let total =
+        data.tasks.length;
+
+    let completed =
+        data.tasks.filter(t => t.done).length;
+
+    let percent =
+        total === 0
+        ? 0
+        : Math.round((completed / total) * 100);
+
+    document.getElementById("percentage").innerText =
+        percent + "%";
+
+    document.getElementById("progressText").innerText =
+        completed + " of " + total + " completed";
+
+    document.getElementById("progressCircle").style.background =
+        `conic-gradient(
+            #8c6cff ${percent * 3.6}deg,
+            #333 ${percent * 3.6}deg
+        )`;
+
+}
+
+
+// Format time
+
+function formatTime(time) {
+
+    let [h,m] =
+        time.split(":");
+
+    h = parseInt(h);
+
+    let suffix =
+        h >= 12 ? "PM" : "AM";
+
+    h =
+        h % 12 || 12;
+
+    return h + ":" + m + " " + suffix;
+
+}
+
+
+// Save
+
+function save() {
+
+    localStorage.setItem(
+        "routineData",
+        JSON.stringify(data)
+    );
+
+}
+
+
+// Reset
+
+function resetToday() {
+
+    if (!confirm(
+        "Reset all routines for today?"
+    )) return;
+
+    data.tasks = [];
+
+    save();
+
+    render();
+
+}
+
+
+// Prevent HTML injection
+
+function escapeHTML(text) {
+
+    return text
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+// Date display
+
+function showDate() {
+
+    let d = new Date();
+
+    document.getElementById("date").innerText =
+        d.toLocaleDateString(
+            undefined,
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            }
+        );
+
+}
+
+
+// Start
+
+checkNewDay();
+
+showDate();
+
+render();
+
+</script>
+
+</body>
+</html>
