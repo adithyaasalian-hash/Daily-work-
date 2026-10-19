@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Reels & Shorts Counter</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:linear-gradient(135deg,#080b20,#21104d,#38145e);
+    color:white;
+    min-height:100vh;
+    padding:18px;
+}
+
+.container{
+    max-width:650px;
+    margin:auto;
+}
+
+h1{text-align:center;margin-bottom:5px}
+
+.subtitle{
+    text-align:center;
+    color:#aaa;
+    margin-bottom:20px;
+}
+
+.card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:18px;
+}
+
+.date{
+    text-align:center;
+    color:#aaa;
+    font-size:13px;
+}
+
+.counter{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    padding:15px;
+    margin:12px 0;
+    background:rgba(255,255,255,.07);
+    border-radius:15px;
+}
+
+.icon{
+    font-size:35px;
+    width:50px;
+    text-align:center;
+}
+
+.info{flex:1}
+
+.name{
+    font-weight:bold;
+    font-size:17px;
+}
+
+.limit{
+    font-size:12px;
+    color:#aaa;
+    margin-top:4px;
+}
+
+.number{
+    font-size:30px;
+    font-weight:bold;
+    min-width:45px;
+    text-align:center;
+}
+
+.buttons{
+    display:flex;
+    gap:5px;
+}
+
+button{
+    border:0;
+    border-radius:9px;
+    padding:9px 12px;
+    color:white;
+    background:#7355ff;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.minus{
+    background:#555;
+}
+
+.reset{
+    background:#d84747;
+    width:100%;
+    padding:13px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border:0;
+    border-radius:10px;
+    background:rgba(255,255,255,.12);
+    color:white;
+    outline:none;
+}
+
+.progress{
+    height:12px;
+    background:#333;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:15px;
+}
+
+.bar{
+    height:100%;
+    width:0%;
+    background:#8c6cff;
+    transition:.3s;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:15px;
+}
+
+.stat{
+    background:rgba(255,255,255,.07);
+    padding:15px;
+    border-radius:14px;
+    text-align:center;
+}
+
+.statNumber{
+    font-size:25px;
+    font-weight:bold;
+}
+
+.statLabel{
+    font-size:11px;
+    color:#aaa;
+    margin-top:4px;
+}
+
+.warning{
+    color:#ffcc66;
+}
+
+.dangerText{
+    color:#ff7070;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📱 Reels & Shorts Counter</h1>
+
+<p class="subtitle">
+Track your daily scrolling habits
+</p>
+
+<div class="card">
+
+<div class="date" id="date"></div>
+
+<h2>🎯 Daily Limits</h2>
+
+<label>Instagram Reels</label>
+<input id="reelLimit" type="number" min="1" value="30">
+
+<br><br>
+
+<label>Instagram Stories</label>
+<input id="storyLimit" type="number" min="1" value="20">
+
+<br><br>
+
+<label>YouTube Shorts</label>
+<input id="youtubeLimit" type="number" min="1" value="30">
+
+<br><br>
+
+<button onclick="saveLimits()" style="width:100%">
+Save Limits
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>📊 Today's Usage</h2>
+
+
+<!-- Instagram Reels -->
+
+<div class="counter">
+
+<div class="icon">🎬</div>
+
+<div class="info">
+
+<div class="name">Instagram Reels</div>
+
+<div class="limit">
+Limit: <span id="reelLimitText">30</span>
+</div>
+
+</div>
+
+<div class="number" id="reels">0</div>
+
+<div class="buttons">
+
+<button class="minus"
+onclick="change('reels',-1)">−</button>
+
+<button
+onclick="change('reels',1)">+</button>
+
+</div>
+
+</div>
+
+
+<!-- Stories -->
+
+<div class="counter">
+
+<div class="icon">📸</div>
+
+<div class="info">
+
+<div class="name">Instagram Stories</div>
+
+<div class="limit">
+Limit: <span id="storyLimitText">20</span>
+</div>
+
+</div>
+
+<div class="number" id="stories">0</div>
+
+<div class="buttons">
+
+<button class="minus"
+onclick="change('stories',-1)">−</button>
+
+<button
+onclick="change('stories',1)">+</button>
+
+</div>
+
+</div>
+
+
+<!-- YouTube -->
+
+<div class="counter">
+
+<div class="icon">▶️</div>
+
+<div class="info">
+
+<div class="name">YouTube Shorts</div>
+
+<div class="limit">
+Limit: <span id="youtubeLimitText">30</span>
+</div>
+
+</div>
+
+<div class="number" id="youtube">0</div>
+
+<div class="buttons">
+
+<button class="minus"
+onclick="change('youtube',-1)">−</button>
+
+<button
+onclick="change('youtube',1)">+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>📈 Overall Progress</h2>
+
+<div id="overallText">
+0 / 80
+</div>
+
+<div class="progress">
+<div class="bar" id="overallBar"></div>
+</div>
+
+<div class="stats">
+
+<div class="stat">
+
+<div class="statNumber" id="total">
+0
+</div>
+
+<div class="statLabel">
+TOTAL WATCHED
+</div>
+
+</div>
+
+<div class="stat">
+
+<div class="statNumber" id="remaining">
+80
+</div>
+
+<div class="statLabel">
+REMAINING
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🔥 Daily Status</h2>
+
+<p id="status">
+You're within your limits 👍
+</p>
+
+</div>
+
+
+<div class="card">
+
+<button class="reset" onclick="resetToday()">
+🔄 Reset Today's Counters
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+let data =
+JSON.parse(localStorage.getItem("scrollCounter"))
+|| {
+    date:getDate(),
+
+    reels:0,
+    stories:0,
+    youtube:0,
+
+    reelLimit:30,
+    storyLimit:20,
+    youtubeLimit:30
+};
+
+
+// Get today's date
+
+function getDate(){
+
+    return new Date()
+    .toISOString()
+    .split("T")[0];
+
+}
+
+
+// Check new day
+
+function checkDate(){
+
+    let today=getDate();
+
+    if(data.date!==today){
+
+        data.date=today;
+
+        data.reels=0;
+        data.stories=0;
+        data.youtube=0;
+
+        save();
+
+    }
+
+}
+
+
+// Change counter
+
+function change(type,value){
+
+    data[type]+=value;
+
+    if(data[type]<0)
+        data[type]=0;
+
+    save();
+
+    render();
+
+}
+
+
+// Save
+
+function save(){
+
+    localStorage.setItem(
+        "scrollCounter",
+        JSON.stringify(data)
+    );
+
+}
+
+
+// Save limits
+
+function saveLimits(){
+
+    data.reelLimit =
+        Math.max(
+            1,
+            parseInt(
+                document.getElementById("reelLimit").value
+            ) || 1
+        );
+
+    data.storyLimit =
+        Math.max(
+            1,
+            parseInt(
+                document.getElementById("storyLimit").value
+            ) || 1
+        );
+
+    data.youtubeLimit =
+        Math.max(
+            1,
+            parseInt(
+                document.getElementById("youtubeLimit").value
+            ) || 1
+        );
+
+    save();
+
+    render();
+
+    alert("Daily limits saved ✅");
+
+}
+
+
+// Render
+
+function render(){
+
+    document.getElementById("reels").innerText =
+        data.reels;
+
+    document.getElementById("stories").innerText =
+        data.stories;
+
+    document.getElementById("youtube").innerText =
+        data.youtube;
+
+
+    document.getElementById("reelLimitText").innerText =
+        data.reelLimit;
+
+    document.getElementById("storyLimitText").innerText =
+        data.storyLimit;
+
+    document.getElementById("youtubeLimitText").innerText =
+        data.youtubeLimit;
+
+
+    document.getElementById("reelLimit").value =
+        data.reelLimit;
+
+    document.getElementById("storyLimit").value =
+        data.storyLimit;
+
+    document.getElementById("youtubeLimit").value =
+        data.youtubeLimit;
+
+
+    let totalLimit =
+        data.reelLimit +
+        data.storyLimit +
+        data.youtubeLimit;
+
+
+    let total =
+        data.reels +
+        data.stories +
+        data.youtube;
+
+
+    let remaining =
+        Math.max(0,totalLimit-total);
+
+
+    let percent =
+        Math.min(
+            100,
+            Math.round((total/totalLimit)*100)
+        );
+
+
+    document.getElementById("total").innerText =
+        total;
+
+    document.getElementById("remaining").innerText =
+        remaining;
+
+
+    document.getElementById("overallText").innerText =
+        total + " / " + totalLimit;
+
+
+    document.getElementById("overallBar").style.width =
+        percent + "%";
+
+
+    let status =
+        document.getElementById("status");
+
+
+    if(
+        data.reels > data.reelLimit ||
+        data.stories > data.storyLimit ||
+        data.youtube > data.youtubeLimit
+    ){
+
+        status.innerHTML =
+        "⚠️ You've crossed one or more daily limits.";
+
+        status.className="dangerText";
+
+    }
+
+    else if(total >= totalLimit){
+
+        status.innerHTML =
+        "🎯 Daily limit reached.";
+
+        status.className="warning";
+
+    }
+
+    else{
+
+        status.innerHTML =
+        "You're within your limits 👍";
+
+        status.className="";
+
+    }
+
+
+    document.getElementById("date").innerText =
+        new Date().toLocaleDateString(
+            undefined,
+            {
+                weekday:"long",
+                day:"numeric",
+                month:"long",
+                year:"numeric"
+            }
+        );
+
+}
+
+
+// Reset
+
+function resetToday(){
+
+    if(!confirm(
+        "Reset today's counters?"
+    )) return;
+
+
+    data.reels=0;
+    data.stories=0;
+    data.youtube=0;
+
+    save();
+
+    render();
+
+}
+
+
+checkDate();
+render();
+
+</script>
+
+</body>
+</html>
