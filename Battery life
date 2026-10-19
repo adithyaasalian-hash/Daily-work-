@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Battery mAh Health Checker</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    padding:20px;
+    font-family:Arial,sans-serif;
+    color:white;
+    background:
+        radial-gradient(circle at top,#24366d,#0a0d1c 55%);
+}
+
+.container{
+    max-width:650px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin:5px 0;
+}
+
+.subtitle{
+    text-align:center;
+    color:#aeb4c9;
+    margin-bottom:25px;
+}
+
+.card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:22px;
+    padding:20px;
+    margin-bottom:18px;
+    backdrop-filter:blur(12px);
+}
+
+label{
+    display:block;
+    margin:15px 0 7px;
+    color:#ddd;
+}
+
+select,
+input{
+    width:100%;
+    padding:14px;
+    border:0;
+    border-radius:12px;
+    outline:none;
+    background:rgba(255,255,255,.12);
+    color:white;
+    font-size:16px;
+}
+
+select option{
+    color:black;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin-top:18px;
+    border:0;
+    border-radius:12px;
+    background:#7561ff;
+    color:white;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    transform:translateY(-1px);
+}
+
+.result{
+    display:none;
+    text-align:center;
+}
+
+.battery{
+    width:210px;
+    height:100px;
+    border:5px solid white;
+    border-radius:15px;
+    margin:20px auto;
+    position:relative;
+    padding:6px;
+}
+
+.battery:after{
+    content:"";
+    position:absolute;
+    right:-17px;
+    top:28px;
+    width:12px;
+    height:38px;
+    background:white;
+    border-radius:0 5px 5px 0;
+}
+
+.fill{
+    height:100%;
+    width:0%;
+    border-radius:7px;
+    transition:.7s;
+    background:#64d66b;
+}
+
+.health{
+    font-size:48px;
+    font-weight:bold;
+}
+
+.capacity{
+    font-size:22px;
+    margin:8px;
+}
+
+.status{
+    display:inline-block;
+    padding:8px 14px;
+    border-radius:20px;
+    margin-top:8px;
+    background:rgba(255,255,255,.1);
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:20px;
+}
+
+.stat{
+    background:rgba(255,255,255,.06);
+    padding:15px;
+    border-radius:14px;
+}
+
+.stat b{
+    display:block;
+    font-size:21px;
+    margin-bottom:5px;
+}
+
+.small{
+    color:#aaa;
+    font-size:12px;
+}
+
+.note{
+    color:#999;
+    font-size:12px;
+    line-height:1.5;
+    margin-top:18px;
+}
+
+#liveBox{
+    display:none;
+}
+
+.liveValue{
+    font-size:30px;
+    font-weight:bold;
+}
+
+.warning{
+    color:#ffcc55;
+}
+
+.bad{
+    color:#ff6969;
+}
+
+.good{
+    color:#65e37a;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🔋 Battery mAh Checker</h1>
+
+<p class="subtitle">
+Universal battery capacity & health estimator
+</p>
+
+
+<div class="card">
+
+<h2>📱 Device</h2>
+
+<label>Device Type</label>
+
+<select id="device">
+
+<option>📱 Smartphone</option>
+<option>📲 Tablet</option>
+<option>💻 Laptop</option>
+<option>🔋 Power Bank</option>
+<option>🎮 Gaming Device</option>
+<option>⌚ Smartwatch</option>
+<option>🎧 Earbuds</option>
+<option>🚗 Electric Vehicle</option>
+<option>🔌 Other</option>
+
+</select>
+
+
+<label>Rated / Original Capacity (mAh)</label>
+
+<input
+id="rated"
+type="number"
+placeholder="Example: 5000"
+min="1">
+
+
+<label>Current Measured Capacity (mAh)</label>
+
+<input
+id="current"
+type="number"
+placeholder="Example: 4200"
+min="0">
+
+
+<label>Battery Cycles (optional)</label>
+
+<input
+id="cycles"
+type="number"
+placeholder="Example: 350"
+min="0">
+
+
+<button onclick="checkBattery()">
+🔍 Check Battery
+</button>
+
+</div>
+
+
+<div class="card result" id="result">
+
+<h2 id="deviceName">Battery Health</h2>
+
+<div class="battery">
+    <div class="fill" id="fill"></div>
+</div>
+
+<div class="health" id="health">
+0%
+</div>
+
+<div class="capacity" id="capacity">
+0 / 0 mAh
+</div>
+
+<div class="status" id="status">
+Unknown
+</div>
+
+
+<div class="grid">
+
+<div class="stat">
+<b id="lost">0 mAh</b>
+<span class="small">Capacity Lost</span>
+</div>
+
+<div class="stat">
+<b id="remaining">0 mAh</b>
+<span class="small">Capacity Remaining</span>
+</div>
+
+<div class="stat">
+<b id="cyclesDisplay">—</b>
+<span class="small">Battery Cycles</span>
+</div>
+
+<div class="stat">
+<b id="rating">—</b>
+<span class="small">Condition</span>
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card" id="liveBox">
+
+<h2>⚡ Browser Battery Information</h2>
+
+<div class="grid">
+
+<div class="stat">
+<b id="livePercent">—</b>
+<span class="small">Battery Level</span>
+</div>
+
+<div class="stat">
+<b id="charging">—</b>
+<span class="small">Charging</span>
+</div>
+
+</div>
+
+<p class="note">
+Some browsers expose live battery information.
+The browser normally cannot reveal the physical battery's
+actual mAh capacity.
+</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>ℹ️ How to use</h3>
+
+<p class="note">
+
+<strong>Rated capacity:</strong>
+The battery capacity when new, for example 5000 mAh.
+
+<br><br>
+
+<strong>Current capacity:</strong>
+The measured maximum capacity now, for example 4200 mAh.
+
+<br><br>
+
+Example:
+5000 mAh original → 4200 mAh current =
+<strong>84% battery health</strong>.
+
+<br><br>
+
+For laptops or other devices that report capacity in Wh,
+convert Wh to mAh using the battery voltage before entering
+the value.
+
+</p>
+
+</div>
+
+</div>
+
+
+<script>
+
+function checkBattery(){
+
+    let rated =
+        Number(document.getElementById("rated").value);
+
+    let current =
+        Number(document.getElementById("current").value);
+
+    let cycles =
+        Number(document.getElementById("cycles").value);
+
+    let device =
+        document.getElementById("device").value;
+
+
+    if(!rated || rated <= 0){
+
+        alert("Enter the original/rated capacity.");
+
+        return;
+    }
+
+    if(current < 0 || current > rated){
+
+        alert(
+            "Current capacity must be between 0 and the rated capacity."
+        );
+
+        return;
+    }
+
+
+    let health =
+        (current / rated) * 100;
+
+    health =
+        Math.round(health * 10) / 10;
+
+
+    let lost =
+        rated - current;
+
+
+    let status;
+    let rating;
+    let className;
+
+
+    if(health >= 90){
+
+        status = "🟢 Excellent";
+        rating = "Excellent";
+        className = "good";
+
+    }
+    else if(health >= 80){
+
+        status = "🟢 Good";
+        rating = "Good";
+        className = "good";
+
+    }
+    else if(health >= 70){
+
+        status = "🟡 Fair";
+        rating = "Fair";
+        className = "warning";
+
+    }
+    else if(health >= 60){
+
+        status = "🟠 Weak";
+        rating = "Weak";
+        className = "warning";
+
+    }
+    else{
+
+        status = "🔴 Poor";
+        rating = "Poor";
+        className = "bad";
+
+    }
+
+
+    document.getElementById("result")
+        .style.display = "block";
+
+
+    document.getElementById("deviceName")
+        .innerText = device + " Battery";
+
+
+    document.getElementById("health")
+        .innerText = health + "%";
+
+
+    document.getElementById("capacity")
+        .innerText =
+        current.toLocaleString() +
+        " / " +
+        rated.toLocaleString() +
+        " mAh";
+
+
+    document.getElementById("lost")
+        .innerText =
+        lost.toLocaleString() + " mAh";
+
+
+    document.getElementById("remaining")
+        .innerText =
+        current.toLocaleString() + " mAh";
+
+
+    document.getElementById("cyclesDisplay")
+        .innerText =
+        cycles > 0 ? cycles : "—";
+
+
+    document.getElementById("rating")
+        .innerText = rating;
+
+
+    let statusElement =
+        document.getElementById("status");
+
+    statusElement.innerText = status;
+
+    statusElement.className =
+        "status " + className;
+
+
+    document.getElementById("fill")
+        .style.width =
+        Math.min(100,health) + "%";
+
+}
+
+
+// ================================
+// Browser Battery API
+// ================================
+
+async function getLiveBattery(){
+
+    if(!("getBattery" in navigator))
+        return;
+
+    try{
+
+        let battery =
+            await navigator.getBattery();
+
+        document.getElementById("liveBox")
+            .style.display = "block";
+
+
+        function update(){
+
+            document.getElementById("livePercent")
+                .innerText =
+                Math.round(
+                    battery.level * 100
+                ) + "%";
+
+
+            document.getElementById("charging")
+                .innerText =
+                battery.charging
+                ? "⚡ Yes"
+                : "No";
+
+        }
+
+
+        update();
+
+        battery.addEventListener(
+            "levelchange",
+            update
+        );
+
+        battery.addEventListener(
+            "chargingchange",
+            update
+        );
+
+    }
+    catch(e){
+
+        console.log(
+            "Battery information unavailable"
+        );
+
+    }
+
+}
+
+getLiveBattery();
+
+</script>
+
+</body>
+</html>
