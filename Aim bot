@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Auto Fire Arena</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    overflow:hidden;
+    background:#080b16;
+    font-family:Arial,sans-serif;
+    color:white;
+    touch-action:none;
+}
+
+canvas{
+    display:block;
+    background:radial-gradient(circle,#18213d,#070914);
+}
+
+#ui{
+    position:fixed;
+    top:12px;
+    left:12px;
+    right:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    pointer-events:none;
+}
+
+.panel{
+    background:rgba(0,0,0,.55);
+    padding:10px 14px;
+    border-radius:12px;
+    backdrop-filter:blur(8px);
+}
+
+button{
+    pointer-events:auto;
+    border:0;
+    border-radius:10px;
+    padding:10px 14px;
+    background:#7657ff;
+    color:white;
+    font-weight:bold;
+}
+
+#gameOver{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+}
+
+.box{
+    background:#151a32;
+    padding:30px;
+    border-radius:20px;
+    width:min(90%,400px);
+}
+
+#fireMode{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+}
+
+#fireMode.off{
+    background:#555;
+}
+
+.health{
+    color:#ff6b6b;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="ui">
+
+    <div class="panel">
+        🎯 Score: <b id="score">0</b><br>
+        🌊 Wave: <b id="wave">1</b>
+    </div>
+
+    <div class="panel">
+        ❤️ <span id="health">100</span>
+        &nbsp; ⚡ <span id="rate">500</span>ms
+    </div>
+
+</div>
+
+<button id="fireMode" onclick="toggleAutoFire()">
+🔥 AUTO FIRE: ON
+</button>
+
+<div id="gameOver">
+    <div class="box">
+        <h1>💥 GAME OVER</h1>
+
+        <h2>Score: <span id="finalScore">0</span></h2>
+
+        <button onclick="restart()">
+            🔄 PLAY AGAIN
+        </button>
+    </div>
+</div>
+
+<script>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+    canvas.width=innerWidth;
+    canvas.height=innerHeight;
+}
+
+resize();
+addEventListener("resize",resize);
+
+
+// =====================
+// GAME VARIABLES
+// =====================
+
+let player;
+let bullets=[];
+let enemies=[];
+let particles=[];
+
+let score=0;
+let wave=1;
+let health=100;
+
+let autoFire=true;
+let fireRate=500;
+let lastShot=0;
+
+let gameRunning=true;
+
+let mouse={
+    x:innerWidth/2,
+    y:innerHeight/2
+};
+
+
+// =====================
+// PLAYER
+// =====================
+
+function createPlayer(){
+
+    player={
+        x:canvas.width/2,
+        y:canvas.height/2,
+        radius:18,
+        speed:4
+    };
+}
+
+createPlayer();
+
+
+// =====================
+// INPUT
+// =====================
+
+canvas.addEventListener("mousemove",e=>{
+    mouse.x=e.clientX;
+    mouse.y=e.clientY;
+});
+
+canvas.addEventListener("touchmove",e=>{
+
+    e.preventDefault();
+
+    mouse.x=e.touches[0].clientX;
+    mouse.y=e.touches[0].clientY;
+
+},{passive:false});
+
+
+// =====================
+// SHOOT
+// =====================
+
+function shoot(){
+
+    let dx=mouse.x-player.x;
+    let dy=mouse.y-player.y;
+
+    let distance=Math.hypot(dx,dy);
+
+    if(distance===0)return;
+
+    let speed=10;
+
+    bullets.push({
+
+        x:player.x,
+        y:player.y,
+
+        vx:dx/distance*speed,
+        vy:dy/distance*speed,
+
+        radius:5
+    });
+}
+
+
+// =====================
+// AUTO FIRE
+// =====================
+
+function autoShoot(){
+
+    if(!autoFire)return;
+
+    let now=Date.now();
+
+    if(now-lastShot>=fireRate){
+
+        shoot();
+
+        lastShot=now;
+    }
+}
+
+
+function toggleAutoFire(){
+
+    autoFire=!autoFire;
+
+    const btn=document.getElementById("fireMode");
+
+    btn.innerText=
+        autoFire
+        ? "🔥 AUTO FIRE: ON"
+        : "🔥 AUTO FIRE: OFF";
+
+    btn.classList.toggle("off",!autoFire);
+}
+
+
+// =====================
+// ENEMIES
+// =====================
+
+function spawnEnemy(){
+
+    let side=Math.floor(Math.random()*4);
+
+    let x,y;
+
+    if(side===0){
+        x=Math.random()*canvas.width;
+        y=-30;
+    }
+
+    if(side===1){
+        x=canvas.width+30;
+        y=Math.random()*canvas.height;
+    }
+
+    if(side===2){
+        x=Math.random()*canvas.width;
+        y=canvas.height+30;
+    }
+
+    if(side===3){
+        x=-30;
+        y=Math.random()*canvas.height;
+    }
+
+    enemies.push({
+
+        x:x,
+        y:y,
+
+        radius:15+Math.random()*10,
+
+        speed:0.7+wave*.08,
+
+        hp:1+Math.floor(wave/4)
+    });
+}
+
+
+// =====================
+// PARTICLES
+// =====================
+
+function explosion(x,y){
+
+    for(let i=0;i<12;i++){
+
+        particles.push({
+
+            x:x,
+            y:y,
+
+            vx:(Math.random()-.5)*5,
+            vy:(Math.random()-.5)*5,
+
+            life:30
+        });
+    }
+}
+
+
+// =====================
+// UPDATE
+// =====================
+
+function update(){
+
+    if(!gameRunning)return;
+
+
+    // Player follows pointer smoothly
+
+    let dx=mouse.x-player.x;
+    let dy=mouse.y-player.y;
+
+    let dist=Math.hypot(dx,dy);
+
+    if(dist>30){
+
+        player.x+=dx/dist*player.speed;
+        player.y+=dy/dist*player.speed;
+    }
+
+
+    // Keep player inside screen
+
+    player.x=Math.max(20,
+        Math.min(canvas.width-20,player.x));
+
+    player.y=Math.max(20,
+        Math.min(canvas.height-20,player.y));
+
+
+    // Auto fire
+
+    autoShoot();
+
+
+    // Bullets
+
+    bullets.forEach(b=>{
+
+        b.x+=b.vx;
+        b.y+=b.vy;
+
+    });
+
+    bullets=bullets.filter(b=>
+        b.x>-50 &&
+        b.x<canvas.width+50 &&
+        b.y>-50 &&
+        b.y<canvas.height+50
+    );
+
+
+    // Spawn enemies
+
+    if(Math.random()<0.015+wave*.002){
+
+        spawnEnemy();
+    }
+
+
+    // Enemy movement
+
+    enemies.forEach(e=>{
+
+        let dx=player.x-e.x;
+        let dy=player.y-e.y;
+
+        let d=Math.hypot(dx,dy);
+
+        e.x+=dx/d*e.speed;
+        e.y+=dy/d*e.speed;
+
+
+        // Enemy hits player
+
+        if(d<e.radius+player.radius){
+
+            health-=0.5;
+
+            e.x-=dx/d*5;
+            e.y-=dy/d*5;
+
+            if(health<=0){
+
+                health=0;
+                gameOver();
+            }
+        }
+
+    });
+
+
+    // Bullet collision
+
+    for(let i=bullets.length-1;i>=0;i--){
+
+        let b=bullets[i];
+
+        for(let j=enemies.length-1;j>=0;j--){
+
+            let e=enemies[j];
+
+            let d=Math.hypot(
+                b.x-e.x,
+                b.y-e.y
+            );
+
+            if(d<b.radius+e.radius){
+
+                e.hp--;
+
+                bullets.splice(i,1);
+
+                if(e.hp<=0){
+
+                    explosion(e.x,e.y);
+
+                    enemies.splice(j,1);
+
+                    score+=10;
+
+                    if(score%100===0){
+
+                        wave++;
+
+                        fireRate=Math.max(
+                            120,
+                            fireRate-30
+                        );
+                    }
+                }
+
+                break;
+            }
+        }
+    }
+
+
+    // Particles
+
+    particles.forEach(p=>{
+
+        p.x+=p.vx;
+        p.y+=p.vy;
+
+        p.life--;
+
+    });
+
+    particles=particles.filter(p=>p.life>0);
+
+
+    // UI
+
+    document.getElementById("score").innerText=score;
+    document.getElementById("wave").innerText=wave;
+    document.getElementById("health").innerText=
+        Math.ceil(health);
+    document.getElementById("rate").innerText=
+        fireRate;
+
+}
+
+
+// =====================
+// DRAW
+// =====================
+
+function draw(){
+
+    ctx.clearRect(
+        0,0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    // Grid
+
+    ctx.strokeStyle="rgba(255,255,255,.04)";
+    ctx.lineWidth=1;
+
+    let grid=50;
+
+    for(let x=0;x<canvas.width;x+=grid){
+
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+
+    }
+
+    for(let y=0;y<canvas.height;y+=grid){
+
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+
+    }
+
+
+    // Bullets
+
+    bullets.forEach(b=>{
+
+        ctx.beginPath();
+
+        ctx.arc(
+            b.x,
+            b.y,
+            b.radius,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="#ffe66d";
+        ctx.fill();
+
+    });
+
+
+    // Enemies
+
+    enemies.forEach(e=>{
+
+        ctx.beginPath();
+
+        ctx.arc(
+            e.x,
+            e.y,
+            e.radius,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="#ff4f68";
+        ctx.fill();
+
+        ctx.beginPath();
+
+        ctx.arc(
+            e.x,
+            e.y,
+            e.radius*.45,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="#7a1024";
+        ctx.fill();
+
+    });
+
+
+    // Player
+
+    let angle=Math.atan2(
+        mouse.y-player.y,
+        mouse.x-player.x
+    );
+
+    ctx.save();
+
+    ctx.translate(player.x,player.y);
+    ctx.rotate(angle);
+
+    ctx.fillStyle="#6f5cff";
+
+    ctx.fillRect(
+        0,-6,
+        30,
+        12
+    );
+
+    ctx.restore();
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        player.x,
+        player.y,
+        player.radius,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fillStyle="#8d7cff";
+    ctx.fill();
+
+    ctx.strokeStyle="white";
+    ctx.stroke();
+
+
+    // Particles
+
+    particles.forEach(p=>{
+
+        ctx.globalAlpha=p.life/30;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="#ffcc55";
+        ctx.fill();
+
+    });
+
+    ctx.globalAlpha=1;
+
+
+    // Aim circle
+
+    ctx.beginPath();
+
+    ctx.arc(
+        mouse.x,
+        mouse.y,
+        12,
+        0,
+        Math.PI*2
+    );
+
+    ctx.strokeStyle="rgba(255,255,255,.5)";
+    ctx.stroke();
+
+}
+
+
+// =====================
+// GAME OVER
+// =====================
+
+function gameOver(){
+
+    gameRunning=false;
+
+    document.getElementById("finalScore").innerText=
+        score;
+
+    document.getElementById("gameOver").style.display=
+        "flex";
+}
+
+
+// =====================
+// RESTART
+// =====================
+
+function restart(){
+
+    score=0;
+    wave=1;
+    health=100;
+
+    fireRate=500;
+
+    bullets=[];
+    enemies=[];
+    particles=[];
+
+    createPlayer();
+
+    gameRunning=true;
+
+    document.getElementById("gameOver").style.display=
+        "none";
+}
+
+
+// =====================
+// GAME LOOP
+// =====================
+
+function loop(){
+
+    update();
+    draw();
+
+    requestAnimationFrame(loop);
+}
+
+loop();
+
+</script>
+
+</body>
+</html>
