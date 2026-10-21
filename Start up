@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Startup Planner</title>
+
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+
+body{
+    margin:0;
+    background:linear-gradient(135deg,#08111f,#15243d);
+    color:#fff;
+}
+
+header{
+    padding:25px;
+    text-align:center;
+    background:rgba(255,255,255,.06);
+    backdrop-filter:blur(15px);
+}
+
+header h1{margin:0;font-size:30px}
+header p{color:#9eabc0}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    padding:20px;
+}
+
+.tabs{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    margin-bottom:20px;
+}
+
+.tabs button{
+    white-space:nowrap;
+    border:0;
+    padding:12px 18px;
+    border-radius:10px;
+    background:#1d2d48;
+    color:white;
+    cursor:pointer;
+}
+
+.tabs button.active{
+    background:#00d084;
+    color:#06140e;
+    font-weight:bold;
+}
+
+.card{
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    padding:22px;
+    margin-bottom:18px;
+    box-shadow:0 15px 35px rgba(0,0,0,.2);
+}
+
+.section{display:none}
+.section.active{display:block}
+
+label{
+    display:block;
+    margin:15px 0 7px;
+    color:#c9d3e3;
+}
+
+input,textarea,select{
+    width:100%;
+    padding:13px;
+    border-radius:10px;
+    border:1px solid #344761;
+    background:#101d31;
+    color:white;
+    outline:none;
+}
+
+textarea{
+    min-height:100px;
+    resize:vertical;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+}
+
+button.action{
+    border:0;
+    padding:13px 20px;
+    border-radius:10px;
+    background:#00d084;
+    color:#06140e;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:18px;
+}
+
+button.secondary{
+    background:#263957;
+    color:white;
+}
+
+.preview{
+    padding:25px;
+    border-radius:15px;
+    background:#0d192b;
+    margin-top:20px;
+}
+
+.logo{
+    width:80px;
+    height:80px;
+    border-radius:20px;
+    background:#00d084;
+    color:#06140e;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:35px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.progress{
+    height:12px;
+    background:#1d2b42;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.progress div{
+    height:100%;
+    width:0%;
+    background:#00d084;
+    transition:.5s;
+}
+
+.stat{
+    padding:18px;
+    background:#14233a;
+    border-radius:12px;
+}
+
+.stat b{
+    display:block;
+    font-size:25px;
+    margin-top:7px;
+}
+
+.idea{
+    padding:15px;
+    background:#14233a;
+    border-radius:12px;
+    margin-top:10px;
+    cursor:pointer;
+}
+
+footer{
+    text-align:center;
+    color:#7f8da3;
+    padding:30px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🚀 Startup Planner</h1>
+    <p>Turn your idea into a startup plan</p>
+</header>
+
+<div class="container">
+
+<div class="tabs">
+    <button class="active" onclick="openTab('idea',this)">💡 Idea</button>
+    <button onclick="openTab('business',this)">📋 Business</button>
+    <button onclick="openTab('market',this)">🎯 Market</button>
+    <button onclick="openTab('money',this)">💰 Money</button>
+    <button onclick="openTab('brand',this)">🎨 Brand</button>
+    <button onclick="openTab('roadmap',this)">📈 Roadmap</button>
+    <button onclick="openTab('preview',this)">🚀 Preview</button>
+</div>
+
+
+<!-- IDEA -->
+
+<div id="idea" class="section active">
+
+<div class="card">
+<h2>💡 Startup Idea</h2>
+
+<label>Startup Name</label>
+<input id="name" placeholder="Example: CoffeePrice">
+
+<label>What problem are you solving?</label>
+<textarea id="problem" placeholder="Describe the problem..."></textarea>
+
+<label>Your solution</label>
+<textarea id="solution" placeholder="How will your startup solve it?"></textarea>
+
+<label>Category</label>
+<select id="category">
+<option>Technology</option>
+<option>Education</option>
+<option>Finance</option>
+<option>Agriculture</option>
+<option>Healthcare</option>
+<option>Travel</option>
+<option>Food</option>
+<option>Entertainment</option>
+</select>
+
+<button class="action" onclick="generateIdea()">✨ Generate Startup Concept</button>
+
+<div id="ideaOutput"></div>
+</div>
+
+<div class="card">
+<h2>🔥 Quick Idea Generator</h2>
+
+<button class="action secondary" onclick="randomIdea()">
+Generate Random Idea
+</button>
+
+<div id="randomOutput"></div>
+</div>
+
+</div>
+
+
+<!-- BUSINESS -->
+
+<div id="business" class="section">
+
+<div class="card">
+<h2>📋 Business Model</h2>
+
+<label>Target Customers</label>
+<textarea id="customers" placeholder="Who will use your product?"></textarea>
+
+<label>Unique Value Proposition</label>
+<textarea id="value" placeholder="Why should customers choose you?"></textarea>
+
+<label>Revenue Model</label>
+<select id="revenue">
+<option>Subscription</option>
+<option>Commission</option>
+<option>Advertising</option>
+<option>Freemium</option>
+<option>One-time Purchase</option>
+<option>Marketplace</option>
+</select>
+
+<label>Key Features</label>
+<textarea id="features" placeholder="Feature 1, Feature 2, Feature 3..."></textarea>
+</div>
+
+</div>
+
+
+<!-- MARKET -->
+
+<div id="market" class="section">
+
+<div class="card">
+<h2>🎯 Market Analysis</h2>
+
+<label>Target Market Size</label>
+<input id="marketSize" placeholder="Example: ₹500 Crore">
+
+<label>Main Competitors</label>
+<textarea id="competitors" placeholder="List competitors..."></textarea>
+
+<label>Your Competitive Advantage</label>
+<textarea id="advantage" placeholder="What makes you different?"></textarea>
+
+<label>Customer Acquisition Method</label>
+<textarea id="acquisition" placeholder="Instagram, Google, referrals, etc."></textarea>
+</div>
+
+</div>
+
+
+<!-- MONEY -->
+
+<div id="money" class="section">
+
+<div class="card">
+<h2>💰 Startup Budget</h2>
+
+<div class="grid">
+
+<div class="stat">
+<label>Development</label>
+<input type="number" id="dev" value="0">
+</div>
+
+<div class="stat">
+<label>Marketing</label>
+<input type="number" id="marketing" value="0">
+</div>
+
+<div class="stat">
+<label>Operations</label>
+<input type="number" id="operations" value="0">
+</div>
+
+<div class="stat">
+<label>Other</label>
+<input type="number" id="other" value="0">
+</div>
+
+</div>
+
+<button class="action" onclick="calculateBudget()">Calculate Budget</button>
+
+<div class="preview">
+<h2>Total Estimated Cost</h2>
+<h1 id="total">₹0</h1>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- BRAND -->
+
+<div id="brand" class="section">
+
+<div class="card">
+<h2>🎨 Brand Designer</h2>
+
+<label>Brand Name</label>
+<input id="brandName" placeholder="Your startup name">
+
+<label>Tagline</label>
+<input id="tagline" placeholder="Your powerful tagline">
+
+<label>Logo Letter</label>
+<input id="logoLetter" maxlength="2" placeholder="S">
+
+<button class="action" onclick="updateBrand()">Preview Brand</button>
+
+<div class="preview">
+<div class="logo" id="logo">S</div>
+<h2 id="brandPreview">Your Startup</h2>
+<p id="tagPreview">Your tagline</p>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ROADMAP -->
+
+<div id="roadmap" class="section">
+
+<div class="card">
+
+<h2>📈 Startup Roadmap</h2>
+
+<label>Progress</label>
+
+<div class="progress">
+<div id="progressBar"></div>
+</div>
+
+<p id="progressText">0% Complete</p>
+
+<div class="grid">
+
+<label><input type="checkbox" onchange="updateProgress()"> Problem identified</label>
+<label><input type="checkbox" onchange="updateProgress()"> Market research</label>
+<label><input type="checkbox" onchange="updateProgress()"> Business model</label>
+<label><input type="checkbox" onchange="updateProgress()"> Prototype</label>
+<label><input type="checkbox" onchange="updateProgress()"> MVP</label>
+<label><input type="checkbox" onchange="updateProgress()"> Testing</label>
+<label><input type="checkbox" onchange="updateProgress()"> Launch</label>
+<label><input type="checkbox" onchange="updateProgress()"> Marketing</label>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PREVIEW -->
+
+<div id="preview" class="section">
+
+<div class="card">
+
+<h2>🚀 Startup Overview</h2>
+
+<div class="preview">
+
+<h1 id="pName">Your Startup</h1>
+
+<h3>Problem</h3>
+<p id="pProblem">Not added yet.</p>
+
+<h3>Solution</h3>
+<p id="pSolution">Not added yet.</p>
+
+<h3>Customers</h3>
+<p id="pCustomers">Not added yet.</p>
+
+<h3>Revenue</h3>
+<p id="pRevenue">Not added yet.</p>
+
+<h3>Market</h3>
+<p id="pMarket">Not added yet.</p>
+
+</div>
+
+<button class="action" onclick="savePlan()">💾 Save Plan</button>
+<button class="action secondary" onclick="loadPlan()">📂 Load Plan</button>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+Startup Planner • Build • Test • Launch 🚀
+</footer>
+
+
+<script>
+
+function openTab(id,button){
+
+    document.querySelectorAll(".section")
+    .forEach(x=>x.classList.remove("active"));
+
+    document.querySelectorAll(".tabs button")
+    .forEach(x=>x.classList.remove("active"));
+
+    document.getElementById(id).classList.add("active");
+    button.classList.add("active");
+
+    updatePreview();
+}
+
+
+function generateIdea(){
+
+    let name=document.getElementById("name").value;
+    let problem=document.getElementById("problem").value;
+    let solution=document.getElementById("solution").value;
+
+    document.getElementById("ideaOutput").innerHTML=`
+    <div class="preview">
+        <h2>🚀 ${name || "Your Startup"}</h2>
+        <p><b>Problem:</b> ${problem || "Not specified"}</p>
+        <p><b>Solution:</b> ${solution || "Not specified"}</p>
+        <p>💡 This could be developed into an MVP and tested with a small group of users.</p>
+    </div>`;
+}
+
+
+function randomIdea(){
+
+    let ideas=[
+        "🌱 Smart farming assistant for local farmers",
+        "☕ Live agricultural market price tracker",
+        "🚌 Real-time local bus tracking app",
+        "📚 AI study planner for engineering students",
+        "🏪 Digital marketplace for local businesses",
+        "🏏 Cricket tournament management platform",
+        "📝 AI-powered notes and revision app",
+        "🚗 Local vehicle service reminder platform"
+    ];
+
+    let idea=ideas[Math.floor(Math.random()*ideas.length)];
+
+    document.getElementById("randomOutput").innerHTML=
+    `<div class="idea">${idea}</div>`;
+}
+
+
+function calculateBudget(){
+
+    let values=[
+        "dev","marketing","operations","other"
+    ];
+
+    let total=0;
+
+    values.forEach(id=>{
+        total+=Number(document.getElementById(id).value)||0;
+    });
+
+    document.getElementById("total").textContent=
+        "₹"+total.toLocaleString("en-IN");
+}
+
+
+function updateBrand(){
+
+    let name=document.getElementById("brandName").value;
+    let tag=document.getElementById("tagline").value;
+    let letter=document.getElementById("logoLetter").value;
+
+    document.getElementById("brandPreview").textContent=
+        name || "Your Startup";
+
+    document.getElementById("tagPreview").textContent=
+        tag || "Your tagline";
+
+    document.getElementById("logo").textContent=
+        letter || "S";
+}
+
+
+function updateProgress(){
+
+    let boxes=document.querySelectorAll(
+        '#roadmap input[type="checkbox"]'
+    );
+
+    let checked=0;
+
+    boxes.forEach(x=>{
+        if(x.checked) checked++;
+    });
+
+    let percent=Math.round(
+        checked/boxes.length*100
+    );
+
+    document.getElementById("progressBar").style.width=
+        percent+"%";
+
+    document.getElementById("progressText").textContent=
+        percent+"% Complete";
+}
+
+
+function updatePreview(){
+
+    document.getElementById("pName").textContent=
+        document.getElementById("name").value || "Your Startup";
+
+    document.getElementById("pProblem").textContent=
+        document.getElementById("problem").value || "Not added yet.";
+
+    document.getElementById("pSolution").textContent=
+        document.getElementById("solution").value || "Not added yet.";
+
+    document.getElementById("pCustomers").textContent=
+        document.getElementById("customers").value || "Not added yet.";
+
+    document.getElementById("pRevenue").textContent=
+        document.getElementById("revenue").value || "Not added yet.";
+
+    document.getElementById("pMarket").textContent=
+        document.getElementById("marketSize").value || "Not added yet.";
+}
+
+
+function savePlan(){
+
+    let data={};
+
+    document.querySelectorAll("input,textarea,select")
+    .forEach(el=>{
+        if(el.id) data[el.id]=el.value;
+    });
+
+    localStorage.setItem(
+        "startupPlan",
+        JSON.stringify(data)
+    );
+
+    alert("✅ Startup plan saved!");
+}
+
+
+function loadPlan(){
+
+    let saved=localStorage.getItem("startupPlan");
+
+    if(!saved){
+        alert("No saved plan found.");
+        return;
+    }
+
+    let data=JSON.parse(saved);
+
+    Object.keys(data).forEach(id=>{
+
+        let el=document.getElementById(id);
+
+        if(el) el.value=data[id];
+
+    });
+
+    updatePreview();
+    alert("📂 Startup plan loaded!");
+}
+
+</script>
+
+</body>
+</html>
