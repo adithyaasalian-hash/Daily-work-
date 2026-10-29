@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game Installer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #222;
+            color: white;
+            padding: 50px;
+        }
+        .box {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            margin: auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        progress {
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Game Installer</h2>
+    <p>Click Install to start.</p>
+
+    <button onclick="installGame()">Install</button>
+
+    <br><br>
+    <progress id="progressBar" value="0" max="100"></progress>
+    <p id="status">Ready</p>
+</div>
+
+<script>
+function installGame() {
+    let progress = 0;
+    let bar = document.getElementById("progressBar");
+    let status = document.getElementById("status");
+
+    status.innerHTML = "Installing...";
+
+    let interval = setInterval(() => {
+        progress += 5;
+        bar.value = progress;
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            status.innerHTML = "Game Installed Successfully!";
+        }
+    }, 200);
+}
+</script>
+
+</body>
+</html>
