@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMI Calculator with Diet Plan</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+.container{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    width:350px;
+}
+
+h2{
+    text-align:center;
+    color:#333;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border:1px solid #ccc;
+    border-radius:5px;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    background:#28a745;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#218838;
+}
+
+#result{
+    margin-top:15px;
+    padding:10px;
+    background:#f9f9f9;
+    border-radius:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>BMI Calculator</h2>
+
+    <input type="number" id="weight" placeholder="Weight (kg)">
+    <input type="number" id="height" placeholder="Height (cm)">
+
+    <button onclick="calculateBMI()">Calculate BMI</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+function calculateBMI() {
+    let weight = document.getElementById("weight").value;
+    let height = document.getElementById("height").value;
+
+    if(weight === "" || height === ""){
+        document.getElementById("result").innerHTML =
+        "<p style='color:red'>Please enter weight and height.</p>";
+        return;
+    }
+
+    height = height / 100;
+    let bmi = (weight / (height * height)).toFixed(1);
+
+    let category = "";
+    let diet = "";
+
+    if(bmi < 18.5){
+        category = "Underweight";
+        diet = `
+        <ul>
+            <li>Eat more calories</li>
+            <li>Milk, eggs, nuts</li>
+            <li>Protein-rich foods</li>
+            <li>5-6 meals daily</li>
+        </ul>`;
+    }
+    else if(bmi < 25){
+        category = "Normal Weight";
+        diet = `
+        <ul>
+            <li>Balanced diet</li>
+            <li>Fruits and vegetables</li>
+            <li>Drink enough water</li>
+            <li>Exercise regularly</li>
+        </ul>`;
+    }
+    else if(bmi < 30){
+        category = "Overweight";
+        diet = `
+        <ul>
+            <li>Reduce sugar intake</li>
+            <li>Eat more vegetables</li>
+            <li>Avoid fried foods</li>
+            <li>Walk 30 minutes daily</li>
+        </ul>`;
+    }
+    else{
+        category = "Obese";
+        diet = `
+        <ul>
+            <li>Low-calorie diet</li>
+            <li>High-fiber foods</li>
+            <li>Avoid junk food</li>
+            <li>Consult a dietitian</li>
+        </ul>`;
+    }
+
+    document.getElementById("result").innerHTML = `
+        <h3>BMI: ${bmi}</h3>
+        <p><strong>Category:</strong> ${category}</p>
+        <h4>Recommended Diet Plan</h4>
+        ${diet}
+    `;
+}
+</script>
+
+</body>
+</html>
