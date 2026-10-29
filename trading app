@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trading Downfall Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+
+        #result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .safe {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .warning {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Trading Downfall Detector</h2>
+
+<label>Previous Price</label>
+<input type="number" id="oldPrice" placeholder="100">
+
+<label>Current Price</label>
+<input type="number" id="newPrice" placeholder="80">
+
+<button onclick="detectDownfall()">Analyze</button>
+
+<div id="result"></div>
+
+<script>
+function detectDownfall() {
+
+    let oldPrice = parseFloat(document.getElementById("oldPrice").value);
+    let newPrice = parseFloat(document.getElementById("newPrice").value);
+
+    if (!oldPrice || !newPrice) {
+        alert("Enter valid prices");
+        return;
+    }
+
+    let dropPercent = ((oldPrice - newPrice) / oldPrice) * 100;
+
+    let result = document.getElementById("result");
+
+    if (dropPercent >= 20) {
+        result.className = "warning";
+        result.innerHTML = `
+            <h3>⚠ Downfall Alert</h3>
+            <p>Price dropped by <b>${dropPercent.toFixed(2)}%</b></p>
+            <p>High Risk Trend Detected.</p>
+        `;
+    } else {
+        result.className = "safe";
+        result.innerHTML = `
+            <h3>✅ Stable</h3>
+            <p>Price changed by ${dropPercent.toFixed(2)}%</p>
+            <p>No major downfall detected.</p>
+        `;
+    }
+}
+</script>
+
+</body>
+</html>
