@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FF & COC Account Rate Predictor</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#080711;
+    color:white;
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:
+    radial-gradient(circle at 80% 10%,rgba(124,60,255,.3),transparent 30%),
+    radial-gradient(circle at 10% 90%,rgba(255,204,25,.12),transparent 30%);
+}
+
+header{
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 6%;
+    background:rgba(8,7,17,.9);
+    border-bottom:1px solid #332a4d;
+    position:relative;
+    z-index:5;
+}
+
+.logo{
+    font-size:25px;
+    font-weight:900;
+    font-style:italic;
+}
+
+.logo span{
+    color:#ffcc19;
+}
+
+.badge{
+    border:1px solid #59457b;
+    padding:8px 14px;
+    border-radius:30px;
+    font-size:11px;
+    color:#ddd0ff;
+}
+
+main{
+    max-width:1200px;
+    margin:auto;
+    padding:45px 20px 60px;
+    position:relative;
+}
+
+.hero{
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.eyebrow{
+    color:#ffcc19;
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:3px;
+}
+
+.hero h1{
+    font-size:clamp(40px,7vw,75px);
+    margin:12px 0;
+    font-style:italic;
+    font-weight:1000;
+}
+
+.hero h1 span{
+    color:#ffcc19;
+}
+
+.hero p{
+    color:#aaa4bb;
+    max-width:650px;
+    margin:auto;
+    line-height:1.6;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:450px 1fr;
+    gap:22px;
+}
+
+.card{
+    background:linear-gradient(
+        145deg,
+        #191525,
+        #0c0a13
+    );
+    border:1px solid #332a4d;
+    border-radius:20px;
+    box-shadow:0 20px 50px rgba(0,0,0,.4);
+}
+
+.form{
+    padding:25px;
+}
+
+.game-switch{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:20px;
+}
+
+.game-switch button{
+    margin:0;
+    padding:12px 5px;
+    border-radius:10px;
+    border:1px solid #40355d;
+    background:#171322;
+    color:#ddd6ef;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.game-switch button.active{
+    background:#7c3cff;
+    color:white;
+    border-color:#7c3cff;
+}
+
+.card-title{
+    margin:0 0 20px;
+}
+
+.card-title span{
+    color:#ffcc19;
+}
+
+.field{
+    margin:15px 0;
+}
+
+.field label{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:8px;
+    font-size:13px;
+    font-weight:bold;
+    color:#d8d1e7;
+}
+
+.value{
+    color:#ffcc19;
+}
+
+select,
+input{
+    width:100%;
+    padding:13px;
+    border-radius:10px;
+    border:1px solid #40355d;
+    background:#0d0b16;
+    color:white;
+    outline:none;
+    font-size:14px;
+}
+
+select:focus,
+input:focus{
+    border-color:#7c3cff;
+    box-shadow:0 0 0 3px rgba(124,60,255,.15);
+}
+
+input[type="range"]{
+    padding:0;
+    accent-color:#7c3cff;
+}
+
+button.predict{
+    width:100%;
+    padding:15px;
+    margin-top:12px;
+    border:0;
+    border-radius:12px;
+    background:linear-gradient(
+        90deg,
+        #ffcc19,
+        #ff9919
+    );
+    color:#17120a;
+    font-size:16px;
+    font-weight:1000;
+    cursor:pointer;
+}
+
+button.predict:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 30px rgba(255,180,20,.3);
+}
+
+.result{
+    padding:28px;
+    min-height:620px;
+}
+
+.result-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.result-head h2{
+    margin:0;
+}
+
+.status{
+    font-size:10px;
+    color:#38e58b;
+    border:1px solid rgba(56,229,139,.4);
+    padding:7px 10px;
+    border-radius:20px;
+}
+
+.pricebox{
+    margin-top:20px;
+    text-align:center;
+    padding:30px 15px;
+    border-radius:18px;
+    border:1px solid #5d4422;
+    background:#0d0b14;
+}
+
+.price-label{
+    color:#d8d1e7;
+    font-weight:bold;
+}
+
+.price{
+    font-size:clamp(40px,6vw,68px);
+    color:#ffcc19;
+    font-weight:1000;
+    margin:8px 0;
+}
+
+.note{
+    color:#888191;
+    font-size:11px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:15px;
+}
+
+.stat{
+    padding:17px;
+    background:#0e0c17;
+    border:1px solid #332a4d;
+    border-radius:14px;
+}
+
+.stat b{
+    font-size:23px;
+}
+
+.stat small{
+    display:block;
+    color:#9991a8;
+    margin-top:5px;
+}
+
+.meter{
+    height:8px;
+    background:#292238;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:10px;
+}
+
+.meter i{
+    display:block;
+    height:100%;
+    width:0%;
+    background:linear-gradient(
+        90deg,
+        #7c3cff,
+        #ffcc19
+    );
+    transition:.7s;
+}
+
+.insights{
+    margin-top:18px;
+    display:grid;
+    gap:10px;
+}
+
+.insight{
+    font-size:13px;
+    color:#d9d3e6;
+}
+
+.insight::before{
+    content:"✓";
+    display:inline-grid;
+    place-items:center;
+    width:20px;
+    height:20px;
+    margin-right:8px;
+    border-radius:50%;
+    color:#38e58b;
+    background:rgba(56,229,139,.1);
+}
+
+.warning{
+    margin-top:20px;
+    padding:12px;
+    border:1px solid #3c324f;
+    border-radius:10px;
+    color:#9991a8;
+    font-size:11px;
+    line-height:1.5;
+}
+
+footer{
+    text-align:center;
+    color:#777083;
+    font-size:11px;
+    margin-top:25px;
+}
+
+@media(max-width:850px){
+
+    .layout{
+        grid-template-columns:1fr;
+    }
+
+    nav{
+        display:none;
+    }
+
+    .result{
+        min-height:auto;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo" id="logo">
+        FREE <span>FIRE</span>
+    </div>
+
+    <div class="badge" id="badge">
+        FF ACCOUNT TOOL
+    </div>
+
+</header>
+
+
+<main>
+
+<section class="hero">
+
+    <div class="eyebrow">
+        ACCOUNT VALUE ESTIMATOR
+    </div>
+
+    <h1 id="title">
+        FF ACCOUNT
+        <span>RATE PREDICTION</span>
+    </h1>
+
+    <p id="description">
+        Enter your account details and get an approximate
+        community-style account value.
+    </p>
+
+</section>
+
+
+<div class="layout">
+
+
+<!-- INPUT CARD -->
+
+<section class="card form">
+
+<div class="game-switch">
+
+    <button id="ffButton" class="active">
+        🔥 FREE FIRE
+    </button>
+
+    <button id="cocButton">
+        ⚔️ CLASH OF CLANS
+    </button>
+
+</div>
+
+
+<div id="formArea"></div>
+
+</section>
+
+
+<!-- RESULT CARD -->
+
+<section class="card result">
+
+<div class="result-head">
+
+    <h2>
+        👑 Prediction Result
+    </h2>
+
+    <span class="status">
+        ● CALCULATED
+    </span>
+
+</div>
+
+
+<div class="pricebox">
+
+    <div class="price-label">
+        Estimated Account Value
+    </div>
+
+    <div class="price" id="price">
+        ₹5,000 – ₹9,000
+    </div>
+
+    <div class="note">
+        Approximate INR range • not a guaranteed selling price
+    </div>
+
+</div>
+
+
+<div class="stats">
+
+    <div class="stat">
+
+        <b id="score">
+            78/100
+        </b>
+
+        <small>
+            Demand Score
+        </small>
+
+        <div class="meter">
+            <i id="scoreBar"></i>
+        </div>
+
+    </div>
+
+
+    <div class="stat">
+
+        <b id="tier">
+            HIGH
+        </b>
+
+        <small>
+            Collection Tier
+        </small>
+
+    </div>
+
+</div>
+
+
+<div
+    class="insights"
+    id="insights">
+</div>
+
+
+<div class="warning">
+
+⚠️ This is an estimation tool and not an
+official Garena or Supercell valuation.
+
+Actual account values can vary depending on
+rarity, region, demand, account security,
+progression and marketplace conditions.
+
+Never share your password, OTP or recovery
+information.
+
+</div>
+
+</section>
+
+</div>
+
+
+<footer>
+
+FF & COC Account Rate Predictor •
+For entertainment and estimation purposes
+
+</footer>
+
+</main>
+
+
+<script>
+
+
+/* =====================================================
+   FREE FIRE FORM
+===================================================== */
+
+const ffForm = `
+
+<h2 class="card-title">
+    🎮 Enter FF Account <span>Details</span>
+</h2>
+
+
+<div class="field">
+
+<label>
+    Account Level
+</label>
+
+<select id="ffLevel">
+
+<option value="1">Below 40</option>
+<option value="2">40–59</option>
+<option value="3" selected>60+</option>
+<option value="4">70+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Diamonds Spent
+</label>
+
+<select id="ffDiamonds">
+
+<option value="1">Below ₹1K</option>
+<option value="2">₹1K–₹5K</option>
+<option value="3" selected>₹5K–₹15K</option>
+<option value="4">₹15K+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Rare Bundles
+</label>
+
+<select id="ffBundles">
+
+<option value="1">None / Few</option>
+<option value="2" selected>Some</option>
+<option value="3">Many</option>
+<option value="4">Very Rare / OG</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Gun Skins / Evo Guns
+</label>
+
+<select id="ffGuns">
+
+<option value="1">Few / None</option>
+<option value="2" selected>Several</option>
+<option value="3">Many</option>
+<option value="4">Multiple Upgraded Evo</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Rare Characters / Emotes
+</label>
+
+<select id="ffCharacters">
+
+<option value="1">Low</option>
+<option value="2" selected>Medium</option>
+<option value="3">High</option>
+<option value="4">OG / Limited</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Old / Limited Items
+</label>
+
+<select id="ffOld">
+
+<option value="1">No</option>
+<option value="2" selected>A Few</option>
+<option value="3">Many</option>
+<option value="4">Very Rare OG Items</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Account Age
+</label>
+
+<select id="ffAge">
+
+<option value="1">Under 1 Year</option>
+<option value="2">1–2 Years</option>
+<option value="3" selected>2–4 Years</option>
+<option value="4">4+ Years</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Collection
+    <span class="value"
+          id="ffCollectionValue">
+        70%
+    </span>
+</label>
+
+<input
+    type="range"
+    id="ffCollection"
+    min="10"
+    max="100"
+    value="70"
+>
+
+<div class="meter">
+
+<i id="ffCollectionBar"></i>
+
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Best Rank
+</label>
+
+<select id="ffRank">
+
+<option value="1">Gold / Platinum</option>
+<option value="2">Diamond</option>
+<option value="3" selected>Heroic</option>
+<option value="4">Grandmaster / Top Rank</option>
+
+</select>
+
+</div>
+
+
+<button
+    class="predict"
+    id="ffPredict">
+
+⚡ PREDICT FF ACCOUNT VALUE
+
+</button>
+
+`;
+
+
+/* =====================================================
+   CLASH OF CLANS FORM
+===================================================== */
+
+const cocForm = `
+
+<h2 class="card-title">
+    ⚔️ Enter COC Account <span>Details</span>
+</h2>
+
+
+<div class="field">
+
+<label>
+    Town Hall Level
+</label>
+
+<select id="cocTH">
+
+<option value="1">TH10 or Below</option>
+<option value="2">TH11</option>
+<option value="3" selected>TH12</option>
+<option value="4">TH13</option>
+<option value="5">TH14</option>
+<option value="6">TH15</option>
+<option value="7">TH16+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Hero Levels
+</label>
+
+<select id="cocHeroes">
+
+<option value="1">Low</option>
+<option value="2">Medium</option>
+<option value="3" selected>High</option>
+<option value="4">Max / Near Max</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Walls / Base Progress
+</label>
+
+<select id="cocWalls">
+
+<option value="1">Low</option>
+<option value="2">Medium</option>
+<option value="3" selected>High</option>
+<option value="4">Max / Near Max</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    War History
+</label>
+
+<select id="cocWar">
+
+<option value="1">Casual</option>
+<option value="2">Active</option>
+<option value="3" selected>Strong War History</option>
+<option value="4">Legend / Competitive</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Rare Skins / Decorations
+</label>
+
+<select id="cocSkins">
+
+<option value="1">Few</option>
+<option value="2" selected>Some</option>
+<option value="3">Many</option>
+<option value="4">Rare / OG Collection</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Magic Items / Books
+</label>
+
+<select id="cocMagic">
+
+<option value="1">Few</option>
+<option value="2" selected>Some</option>
+<option value="3">Many</option>
+<option value="4">Large Stock</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Account Age
+</label>
+
+<select id="cocAge">
+
+<option value="1">Under 2 Years</option>
+<option value="2">2–4 Years</option>
+<option value="3" selected>4–7 Years</option>
+<option value="4">7+ Years</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Base Completion
+    <span class="value"
+          id="cocCollectionValue">
+        75%
+    </span>
+</label>
+
+<input
+    type="range"
+    id="cocCollection"
+    min="10"
+    max="100"
+    value="75"
+>
+
+<div class="meter">
+
+<i id="cocCollectionBar"></i>
+
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label>
+    Pets / Equipment Progress
+</label>
+
+<select id="cocPets">
+
+<option value="1">Low</option>
+<option value="2" selected>Medium</option>
+<option value="3">High</option>
+<option value="4">Max / Rare</option>
+
+</select>
+
+</div>
+
+
+<button
+    class="predict"
+    id="cocPredict">
+
+⚡ PREDICT COC ACCOUNT VALUE
+
+</button>
+
+`;
+
+
+/* =====================================================
+   LOAD FREE FIRE
+===================================================== */
+
+const formArea =
+    document.getElementById("formArea");
+
+formArea.innerHTML =
+    ffForm;
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const ffButton =
+    document.getElementById("ffButton");
+
+const cocButton =
+    document.getElementById("cocButton");
+
+const logo =
+    document.getElementById("logo");
+
+const badge =
+    document.getElementById("badge");
+
+const title =
+    document.getElementById("title");
+
+const description =
+    document.getElementById("description");
+
+
+/* =====================================================
+   GAME SWITCH
+===================================================== */
+
+ffButton.onclick = function(){
+
+    ffButton.classList.add("active");
+
+    cocButton.classList.remove("active");
+
+    formArea.innerHTML =
+        ffForm;
+
+    logo.innerHTML =
+        `FREE <span>FIRE</span>`;
+
+    badge.textContent =
+        "FF ACCOUNT TOOL";
+
+    title.innerHTML =
+        `FF ACCOUNT <span>RATE PREDICTION</span>`;
+
+    description.textContent =
+        "Enter your account details and get an approximate community-style account value.";
+
+    setupFF();
+
+};
+
+
+cocButton.onclick = function(){
+
+    cocButton.classList.add("active");
+
+    ffButton.classList.remove("active");
+
+    formArea.innerHTML =
+        cocForm;
+
+    logo.innerHTML =
+        `CLASH <span>OF CLANS</span>`;
+
+    badge.textContent =
+        "COC ACCOUNT TOOL";
+
+    title.innerHTML =
+        `COC ACCOUNT <span>RATE PREDICTION</span>`;
+
+    description.textContent =
+        "Estimate your Clash of Clans account value from Town Hall, heroes, progression and rare collections.";
+
+    setupCOC();
+
+};
+
+
+/* =====================================================
+   HELPER
+===================================================== */
+
+function number(id){
+
+    return Number(
+        document.getElementById(id).value
+    );
+
+}
+
+
+/* =====================================================
+   FREE FIRE SETUP
+===================================================== */
+
+function setupFF(){
+
+    const collection =
+        document.getElementById(
+            "ffCollection"
+        );
+
+    const collectionValue =
+        document.getElementById(
+            "ffCollectionValue"
+        );
+
+    const collectionBar =
+        document.getElementById(
+            "ffCollectionBar"
+        );
+
+
+    collection.oninput =
+    function(){
+
+        collectionValue.textContent =
+            this.value + "%";
+
+        collectionBar.style.width =
+            this.value + "%";
+
+    };
+
+
+    collection.oninput();
+
+
+    document.getElementById(
+        "ffPredict"
+    ).onclick =
+    predictFF;
+
+
+    predictFF();
+
+}
+
+
+/* =====================================================
+   FREE FIRE PREDICTION
+===================================================== */
+
+function predictFF(){
+
+    const total =
+        number("ffLevel") +
+        number("ffDiamonds") +
+        number("ffBundles") +
+        number("ffGuns") +
+        number("ffCharacters") +
+        number("ffOld") +
+        number("ffAge") +
+        number("ffRank");
+
+
+    const collection =
+        number("ffCollection");
+
+
+    let score =
+        Math.round(
+            (total / 32) * 72 +
+            collection * .28
+        );
+
+
+    score =
+        Math.max(
+            18,
+            Math.min(100,score)
+        );
+
+
+    const base =
+        900 +
+        score * 55;
+
+
+    const low =
+        Math.round(
+            (base * .72) / 100
+        ) * 100;
+
+
+    const high =
+        Math.round(
+            (base * 1.42) / 100
+        ) * 100;
+
+
+    showResult(
+        score,
+        low,
+        high
+    );
+
+
+    let insights=[];
+
+
+    if(number("ffBundles")>=3){
+
+        insights.push(
+            "Rare bundles can strongly increase collector appeal."
+        );
+
+    }
+
+
+    if(number("ffGuns")>=3){
+
+        insights.push(
+            "Evo and gun-skin collection increases account demand."
+        );
+
+    }
+
+
+    if(number("ffOld")>=3){
+
+        insights.push(
+            "Old or limited items can create a collector premium."
+        );
+
+    }
+
+
+    if(collection>=80){
+
+        insights.push(
+            "High collection coverage makes the account more attractive."
+        );
+
+    }
+
+
+    if(number("ffRank")>=3){
+
+        insights.push(
+            "Heroic/Grandmaster history adds prestige."
+        );
+
+    }
+
+
+    if(insights.length===0){
+
+        insights.push(
+            "More rare items and higher collection can improve the estimate."
+        );
+
+    }
+
+
+    showInsights(insights);
+
+}
+
+
+/* =====================================================
+   COC SETUP
+===================================================== */
+
+function setupCOC(){
+
+    const collection =
+        document.getElementById(
+            "cocCollection"
+        );
+
+    const collectionValue =
+        document.getElementById(
+            "cocCollectionValue"
+        );
+
+    const collectionBar =
+        document.getElementById(
+            "cocCollectionBar"
+        );
+
+
+    collection.oninput =
+    function(){
+
+        collectionValue.textContent =
+            this.value + "%";
+
+        collectionBar.style.width =
+            this.value + "%";
+
+    };
+
+
+    collection.oninput();
+
+
+    document.getElementById(
+        "cocPredict"
+    ).onclick =
+    predictCOC;
+
+
+    predictCOC();
+
+}
+
+
+/* =====================================================
+   COC PREDICTION
+===================================================== */
+
+function predictCOC(){
+
+    const total =
+        number("cocTH") +
+        number("cocHeroes") +
+        number("cocWalls") +
+        number("cocWar") +
+        number("cocSkins") +
+        number("cocMagic") +
+        number("cocAge") +
+        number("cocPets");
+
+
+    const collection =
+        number("cocCollection");
+
+
+    let score =
+        Math.round(
+            (total / 56) * 75 +
+            collection * .25
+        );
+
+
+    score =
+        Math.max(
+            18,
+            Math.min(100,score)
+        );
+
+
+    const base =
+        1000 +
+        score * 105;
+
+
+    const low =
+        Math.round(
+            (base * .72) / 100
+        ) * 100;
+
+
+    const high =
+        Math.round(
+            (base * 1.45) / 100
+        ) * 100;
+
+
+    showResult(
+        score,
+        low,
+        high
+    );
+
+
+    let insights=[];
+
+
+    if(number("cocTH")>=5){
+
+        insights.push(
+            "High Town Hall progression is a major value factor."
+        );
+
+    }
+
+
+    if(number("cocHeroes")>=3){
+
+        insights.push(
+            "Strong hero levels increase account progression value."
+        );
+
+    }
+
+
+    if(number("cocSkins")>=3){
+
+        insights.push(
+            "Rare skins and decorations can increase collector demand."
+        );
+
+    }
+
+
+    if(number("cocAge")>=3){
+
+        insights.push(
+            "Older accounts may have additional collector appeal."
+        );
