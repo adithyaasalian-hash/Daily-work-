@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FF Account Rate Predictor</title>
+
+<style>
+:root{
+  --primary:#7c3cff;
+  --secondary:#ffcc19;
+  --bg:#080711;
+  --card:#12101d;
+  --card2:#1b1728;
+  --text:#f7f4ff;
+  --muted:#aaa4bb;
+  --line:#332a4d;
+  --green:#38e58b;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  font-family:Inter,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+body{
+  overflow-x:hidden;
+}
+
+#app{
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 80% 10%,rgba(124,60,255,.3),transparent 30%),
+    radial-gradient(circle at 15% 85%,rgba(255,204,25,.12),transparent 28%),
+    var(--bg);
+}
+
+.grid{
+  position:absolute;
+  inset:0;
+  opacity:.07;
+  pointer-events:none;
+  background-image:
+    linear-gradient(#fff 1px,transparent 1px),
+    linear-gradient(90deg,#fff 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,black,transparent);
+}
+
+header{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:18px clamp(18px,5vw,70px);
+  border-bottom:1px solid var(--line);
+  background:rgba(8,7,17,.82);
+  backdrop-filter:blur(12px);
+}
+
+.logo{
+  font-family:Impact,Arial Black,sans-serif;
+  font-size:30px;
+  letter-spacing:2px;
+  font-style:italic;
+}
+
+.logo span{
+  color:var(--secondary);
+}
+
+nav{
+  display:flex;
+  gap:30px;
+}
+
+nav a{
+  color:#ddd6ef;
+  font-weight:700;
+  cursor:pointer;
+}
+
+nav a:hover{
+  color:var(--secondary);
+}
+
+.badge{
+  border:1px solid #5a467d;
+  padding:8px 13px;
+  border-radius:999px;
+  color:#d9caff;
+  font-size:12px;
+  font-weight:800;
+}
+
+main{
+  position:relative;
+  z-index:1;
+  max-width:1240px;
+  margin:auto;
+  padding:48px clamp(18px,5vw,60px) 70px;
+}
+
+.hero{
+  text-align:center;
+  margin-bottom:34px;
+}
+
+.eyebrow{
+  color:var(--secondary);
+  font-weight:900;
+  letter-spacing:3px;
+  font-size:12px;
+}
+
+.hero h1{
+  font-family:Impact,Arial Black,sans-serif;
+  font-size:clamp(42px,7vw,78px);
+  line-height:.95;
+  margin:10px 0 14px;
+  letter-spacing:1px;
+  font-style:italic;
+}
+
+.hero h1 span{
+  color:var(--secondary);
+  text-shadow:0 0 24px rgba(255,204,25,.25);
+}
+
+.hero p{
+  max-width:680px;
+  margin:auto;
+  color:var(--muted);
+  font-size:16px;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:minmax(300px,460px) 1fr;
+  gap:22px;
+}
+
+.card{
+  background:linear-gradient(
+    145deg,
+    rgba(25,21,38,.96),
+    rgba(12,10,20,.96)
+  );
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+
+.form{
+  padding:26px;
+}
+
+.card-title{
+  font-size:20px;
+  font-weight:900;
+  margin:0 0 20px;
+}
+
+.card-title span{
+  color:var(--secondary);
+}
+
+.field{
+  margin:15px 0;
+}
+
+.field label{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+  font-size:13px;
+  font-weight:800;
+  color:#d8d1e7;
+}
+
+.value{
+  color:var(--secondary);
+}
+
+select,
+input{
+  width:100%;
+  border:1px solid #40355d;
+  background:#0d0b16;
+  color:#f7f4ff;
+  padding:13px 14px;
+  border-radius:10px;
+  outline:none;
+  font:inherit;
+}
+
+select:focus,
+input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(124,60,255,.15);
+}
+
+.range{
+  padding:0;
+  accent-color:var(--primary);
+}
+
+button{
+  width:100%;
+  border:0;
+  border-radius:12px;
+  padding:15px;
+  margin-top:10px;
+  background:linear-gradient(
+    90deg,
+    var(--secondary),
+    #ff9f1a
+  );
+  color:#17120a;
+  font-weight:1000;
+  font-size:16px;
+  cursor:pointer;
+  box-shadow:0 8px 28px rgba(255,174,25,.22);
+  transition:.2s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 35px rgba(255,174,25,.35);
+}
+
+.result{
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:610px;
+}
+
+.result-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.result-head h2{
+  margin:0;
+  font-size:22px;
+}
+
+.status{
+  font-size:11px;
+  font-weight:900;
+  color:var(--green);
+  border:1px solid rgba(56,229,139,.35);
+  padding:7px 10px;
+  border-radius:999px;
+}
+
+.pricebox{
+  text-align:center;
+  padding:28px 12px;
+  border:1px solid #5d4422;
+  border-radius:18px;
+  background:
+    radial-gradient(
+      circle at 50% 0,
+      rgba(255,204,25,.1),
+      transparent 45%
+    ),
+    #0d0b14;
+}
+
+.price-label{
+  color:#d8d1e7;
+  font-weight:800;
+}
+
+.price{
+  font-size:clamp(42px,6vw,70px);
+  font-weight:1000;
+  color:var(--secondary);
+  margin:6px 0;
+}
+
+.note{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:14px;
+}
+
+.stat{
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#0e0c17;
+}
+
+.stat b{
+  font-size:23px;
+}
+
+.stat small{
+  display:block;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.meter{
+  height:9px;
+  background:#292238;
+  border-radius:99px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.meter i{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(
+    90deg,
+    var(--primary),
+    var(--secondary)
+  );
+  border-radius:99px;
+  transition:width .7s ease;
+}
+
+.insights{
+  margin-top:16px;
+  display:grid;
+  gap:9px;
+}
+
+.insight{
+  font-size:13px;
+  color:#d9d3e6;
+}
+
+.insight::before{
+  content:'✓';
+  display:inline-grid;
+  place-items:center;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:rgba(56,229,139,.12);
+  color:var(--green);
+  margin-right:8px;
+  font-weight:900;
+}
+
+.warning{
+  margin-top:18px;
+  padding:12px;
+  border:1px solid #3c324f;
+  border-radius:10px;
+  color:#9991a8;
+  font-size:11px;
+  line-height:1.5;
+}
+
+footer{
+  text-align:center;
+  color:#777083;
+  font-size:11px;
+  margin-top:24px;
+}
+
+@media(max-width:850px){
+
+  nav{
+    display:none;
+  }
+
+  .layout{
+    grid-template-columns:1fr;
+  }
+
+  .result{
+    min-height:auto;
+  }
+
+  .hero{
+    margin-bottom:24px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<div class="grid"></div>
+
+<header>
+
+  <div class="logo">
+    FREE <span>FIRE</span>
+  </div>
+
+  <nav>
+    <a>Home</a>
+    <a>Predictor</a>
+    <a>Tips</a>
+  </nav>
+
+  <div class="badge">
+    FF ACCOUNT TOOL
+  </div>
+
+</header>
+
+<main>
+
+<section class="hero">
+
+  <div class="eyebrow">
+    ACCOUNT VALUE ESTIMATOR
+  </div>
+
+  <h1>
+    FF ACCOUNT
+    <span>RATE PREDICTION</span>
+  </h1>
+
+  <p>
+    Enter your collection details and get a
+    community-style estimate of your account's
+    potential value.
+  </p>
+
+</section>
+
+
+<div class="layout">
+
+
+<!-- LEFT SIDE -->
+
+<section class="card form">
+
+<h2 class="card-title">
+  🎮 Enter Account <span>Details</span>
+</h2>
+
+
+<div class="field">
+
+<label>
+  Account Level
+  <span class="value" id="levelV">60+</span>
+</label>
+
+<select id="level">
+
+<option value="1">
+  Below 40
+</option>
+
+<option value="2">
+  40–59
+</option>
+
+<option value="3" selected>
+  60+
+</option>
+
+<option value="4">
+  70+
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Diamonds Spent
+  <span class="value" id="diaV">₹5K+</span>
+</label>
+
+<select id="dia">
+
+<option value="1">
+  Below ₹1K
+</option>
+
+<option value="2">
+  ₹1K–₹5K
+</option>
+
+<option value="3" selected>
+  ₹5K–₹15K
+</option>
+
+<option value="4">
+  ₹15K+
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Rare Bundles
+  <span class="value" id="bundleV">Some</span>
+</label>
+
+<select id="bundles">
+
+<option value="1">
+  None / Few
+</option>
+
+<option value="2" selected>
+  Some
+</option>
+
+<option value="3">
+  Many
+</option>
+
+<option value="4">
+  Very rare / OG
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Gun Skins & Evo Guns
+  <span class="value" id="gunV">Several</span>
+</label>
+
+<select id="guns">
+
+<option value="1">
+  Few / None
+</option>
+
+<option value="2" selected>
+  Several
+</option>
+
+<option value="3">
+  Many
+</option>
+
+<option value="4">
+  Multiple upgraded Evo
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Rare Characters / Emotes
+</label>
+
+<select id="chars">
+
+<option value="1">
+  Low
+</option>
+
+<option value="2" selected>
+  Medium
+</option>
+
+<option value="3">
+  High
+</option>
+
+<option value="4">
+  OG / Limited
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Old / Limited Items
+</label>
+
+<select id="old">
+
+<option value="1">
+  No
+</option>
+
+<option value="2" selected>
+  A few
+</option>
+
+<option value="3">
+  Many
+</option>
+
+<option value="4">
+  Very rare OG items
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Account Age
+  <span class="value" id="ageV">2–4 years</span>
+</label>
+
+<select id="age">
+
+<option value="1">
+  Under 1 year
+</option>
+
+<option value="2">
+  1–2 years
+</option>
+
+<option value="3" selected>
+  2–4 years
+</option>
+
+<option value="4">
+  4+ years
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Collection Percentage
+  <span class="value" id="collV">70%</span>
+</label>
+
+<input
+  class="range"
+  id="coll"
+  type="range"
+  min="10"
+  max="100"
+  value="70"
+>
+
+<div class="meter">
+  <i id="collBar"></i>
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label>
+  Best Rank Achieved
+</label>
+
+<select id="rank">
+
+<option value="1">
+  Gold / Platinum
+</option>
+
+<option value="2">
+  Diamond
+</option>
+
+<option value="3" selected>
+  Heroic
+</option>
+
+<option value="4">
+  Grandmaster / Top rank
+</option>
+
+</select>
+
+</div>
+
+
+<button id="predict">
+  ⚡ PREDICT MY ACCOUNT VALUE
+</button>
+
+</section>
+
+
+<!-- RIGHT SIDE -->
+
+<section class="card result">
+
+<div class="result-head">
+
+<h2>
+  👑 Prediction Result
+</h2>
+
+<span class="status">
+  ● CALCULATED
+</span>
+
+</div>
+
+
+<div class="pricebox">
+
+<div class="price-label">
+  Estimated Account Value
+</div>
+
+<div class="price" id="price">
+  ₹5,000 – ₹9,000
+</div>
+
+<div class="note">
+  Approximate INR range • not a guaranteed selling price
+</div>
+
+</div>
+
+
+<div class="stats">
+
+<div class="stat">
+
+<b id="score">
+  78/100
+</b>
+
+<small>
+  Demand Score
+</small>
+
+<div class="meter">
+  <i id="scoreBar"></i>
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<b id="tier">
+  HIGH
+</b>
+
+<small>
+  Collection Tier
+</small>
+
+</div>
+
+</div>
+
+
+<div
+  class="insights"
+  id="insights">
+</div>
+
+
+<div class="warning">
+
+⚠️ This is a fun estimation tool,
+not an official Garena valuation.
+
+Actual prices can vary with account
+security, buyer demand, server/region,
+item rarity, and current marketplace
+conditions.
+
+</div>
+
+</section>
+
+</div>
+
+
+<footer>
+
+Built as an FF account value estimator •
+Keep your login credentials private.
+
+</footer>
+
+</main>
+
+</div>
+
+
+<script>
+
+const $ = id =>
+  document.getElementById(id);
+
+
+/* Display values */
+
+const vals = {
+
+  level:[
+    'Below 40',
+    '40–59',
+    '60+',
+    '70+'
+  ],
+
+  dia:[
+    'Below ₹1K',
+    '₹1K–₹5K',
+    '₹5K–₹15K',
+    '₹15K+'
+  ],
+
+  bundles:[
+    'None / Few',
+    'Some',
+    'Many',
+    'Very rare / OG'
+  ],
+
+  guns:[
+    'Few / None',
+    'Several',
+    'Many',
+    'Multiple upgraded Evo'
+  ],
+
+  age:[
+    'Under 1 year',
+    '1–2 years',
+    '2–4 years',
+    '4+ years'
+  ]
+
+};
+
+
+function updateValue(id,output){
+
+  $(id).addEventListener(
+    'change',
+    function(){
+
+      $(output).textContent =
+        vals[id][this.selectedIndex];
+
+    }
+  );
+
+}
+
+
+updateValue('level','levelV');
+updateValue('dia','diaV');
+updateValue('bundles','bundleV');
+updateValue('guns','gunV');
+updateValue('age','ageV');
+
+
+/* Collection slider */
+
+$('coll').oninput = function(){
+
+  const value = this.value;
+
+  $('collV').textContent =
+    value + '%';
+
+  $('collBar').style.width =
+    value + '%';
+
+};
+
+$('coll').oninput();
+
+
+/* Prediction */
+
+function predict(){
+
+  const ids = [
+    'level',
+    'dia',
+    'bundles',
+    'guns',
+    'chars',
+    'old',
+    'age',
+    'rank'
+  ];
+
+  let total = 0;
+
+  ids.forEach(id => {
+
+    total += Number($(id).value);
+
+  });
+
+
+  const collection =
+    Number($('coll').value);
+
+
+  /*
+    Demand score
+  */
+
+  let score = Math.round(
+    Math.min(
+      100,
+      (total / 32) * 72 +
+      (collection * 0.28)
+    )
+  );
+
+
+  score = Math.max(
+    18,
+    score
+  );
+
+
+  /*
+    Estimate value
+
+    This is only a simulated
+    calculator formula.
+  */
+
+  const base =
+    900 + score * 55;
+
+
+  const low =
+    Math.round(
+      (base * 0.72) / 100
+    ) * 100;
+
+
+  const high =
+    Math.round(
+      (base * 1.42) / 100
+    ) * 100;
+
+
+  $('score').textContent =
+    score + '/100';
+
+
+  $('scoreBar').style.width =
+    score + '%';
+
+
+  $('price').textContent =
+    '₹' +
+    low.toLocaleString('en-IN') +
+    ' – ₹' +
+    high.toLocaleString('en-IN');
+
+
+  /*
+    Collection tier
+  */
+
+  let tier;
+
+  if(score >= 85){
+
+    tier = 'ELITE';
+
+  }else if(score >= 70){
+
+    tier = 'HIGH';
+
+  }else if(score >= 50){
+
+    tier = 'MEDIUM';
+
+  }else{
+
+    tier = 'BASIC';
+
+  }
+
+
+  $('tier').textContent =
+    tier;
+
+
+  /*
+    Insights
+  */
+
+  const insights = [];
+
+
+  if(Number($('bundles').value) >= 3){
+
+    insights.push(
+      'Rare bundles are strongly increasing the collector appeal.'
+    );
+
+  }
+
+
+  if(Number($('guns').value) >= 3){
+
+    insights.push(
+      'Evo/gun skin collection gives the account extra demand.'
+    );
+
+  }
+
+
+  if(Number($('old').value) >= 3){
+
+    insights.push(
+      'Old or limited items can create a collector premium.'
+    );
+
+  }
+
+
+  if(collection >= 80){
+
+    insights.push(
+      'High collection coverage makes the account more attractive.'
+    );
+
+  }
+
+
+  if(Number($('rank').value) >= 3){
+
+    insights.push(
+      'Heroic/Grandmaster history adds prestige to the profile.'
+    );
+
+  }
+
+
+  if(insights.length === 0){
+
+    insights.push(
+      'More rare items, upgraded guns and higher collection coverage can improve the estimate.'
+    );
+
+  }
+
+
+  $('insights').innerHTML =
+    insights
+      .slice(0,4)
+      .map(
+        text =>
+          `<div class="insight">${text}</div>`
+      )
+      .join('');
+
+}
+
+
+/* Button */
+
+$('predict').addEventListener(
+  'click',
+  predict
+);
+
+
+/* Initial calculation */
+
+predict();
+
+</script>
+
+</body>
+</html>
