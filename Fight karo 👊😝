@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Billionaire Animal Fight</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#10131b;
+  color:white;
+  font-family:Arial,sans-serif;
+  overflow-x:hidden;
+}
+
+.game{
+  width:100%;
+  max-width:1000px;
+  margin:auto;
+  background:#171b25;
+  min-height:100vh;
+}
+
+/* HEADER */
+.header{
+  padding:15px;
+  text-align:center;
+  background:#202633;
+  border-bottom:2px solid #343b4d;
+}
+.header h1{
+  margin:0;
+  font-size:27px;
+}
+.header p{
+  margin:5px 0 0;
+  color:#aab1c2;
+}
+
+/* CHARACTER SELECT */
+.selection{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:15px;
+}
+
+.box{
+  background:#202633;
+  padding:12px;
+  border-radius:14px;
+}
+
+.box h2{
+  margin:0 0 8px;
+  font-size:16px;
+}
+
+select{
+  width:100%;
+  padding:12px;
+  border-radius:9px;
+  border:1px solid #41495c;
+  background:#11151d;
+  color:white;
+  font-size:16px;
+}
+
+/* HEALTH */
+.health{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+  padding:10px 15px;
+}
+
+.playerName{
+  font-weight:bold;
+  margin-bottom:5px;
+}
+
+.healthbar{
+  height:20px;
+  background:#333947;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.healthbar div{
+  height:100%;
+  width:100%;
+  background:#27d66d;
+  transition:.25s;
+}
+
+.enemy .healthbar div{
+  background:#ff4747;
+}
+
+.energy{
+  height:7px;
+  background:#333947;
+  border-radius:10px;
+  margin-top:5px;
+  overflow:hidden;
+}
+
+.energy div{
+  height:100%;
+  width:0;
+  background:#ffb52e;
+  transition:.2s;
+}
+
+/* ARENA */
+.arena{
+  height:430px;
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(#263750,#1a2635 55%,#303030 56%,#181818);
+  border-top:2px solid #394357;
+  border-bottom:3px solid #555;
+}
+
+.sun{
+  position:absolute;
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:#ffd45c;
+  right:12%;
+  top:45px;
+  opacity:.8;
+}
+
+.building{
+  position:absolute;
+  bottom:80px;
+  width:100%;
+  height:160px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #151c28 0 50px,
+      #202b3b 50px 90px
+    );
+  opacity:.8;
+}
+
+.ground{
+  position:absolute;
+  bottom:0;
+  height:82px;
+  width:100%;
+  background:#161616;
+  border-top:5px solid #777;
+}
+
+.fighter{
+  position:absolute;
+  bottom:75px;
+  width:130px;
+  text-align:center;
+  transition:left .08s linear,right .08s linear;
+  z-index:5;
+}
+
+.fighter .emoji{
+  font-size:75px;
+  filter:drop-shadow(0 8px 5px #000);
+  transition:.15s;
+}
+
+.fighter .label{
+  display:inline-block;
+  padding:5px 9px;
+  background:#000b;
+  border-radius:8px;
+  font-weight:bold;
+  font-size:13px;
+}
+
+.p1{
+  left:8%;
+}
+
+.p2{
+  right:8%;
+  transform:scaleX(-1);
+}
+
+.p2 .label{
+  transform:scaleX(-1);
+}
+
+.hit{
+  animation:hit .18s;
+}
+
+@keyframes hit{
+  50%{
+    transform:translateX(-18px) rotate(-8deg);
+  }
+}
+
+.p2.hit{
+  animation:hit2 .18s;
+}
+
+@keyframes hit2{
+  50%{
+    transform:scaleX(-1) translateX(-18px) rotate(8deg);
+  }
+}
+
+.transform{
+  animation:beast .5s infinite alternate;
+}
+
+@keyframes beast{
+  from{transform:scale(1)}
+  to{transform:scale(1.18)}
+}
+
+.p2.transform{
+  animation:beast2 .5s infinite alternate;
+}
+
+@keyframes beast2{
+  from{transform:scaleX(-1) scale(1)}
+  to{transform:scaleX(-1) scale(1.18)}
+}
+
+/* STATUS */
+.status{
+  position:absolute;
+  top:15px;
+  width:100%;
+  text-align:center;
+  font-size:21px;
+  font-weight:bold;
+  z-index:10;
+  text-shadow:0 3px 4px black;
+}
+
+/* CONTROLS */
+.controls{
+  padding:15px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+
+.controlBox{
+  background:#202633;
+  padding:12px;
+  border-radius:14px;
+}
+
+.controlBox h3{
+  margin:0 0 10px;
+  text-align:center;
+}
+
+.buttons{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+}
+
+button{
+  min-height:48px;
+  border:0;
+  border-radius:10px;
+  background:#303849;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:14px;
+}
+
+button:active{
+  transform:scale(.94);
+}
+
+.attack{
+  background:#713434;
+}
+
+.special{
+  background:#704f1c;
+}
+
+.block{
+  background:#304f72;
+}
+
+.start{
+  margin:0 15px 15px;
+}
+
+.start button{
+  width:100%;
+  background:#bd8b19;
+  font-size:18px;
+}
+
+/* RESULT */
+.result{
+  margin:0 15px 15px;
+  padding:15px;
+  background:#202633;
+  border-radius:14px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+}
+
+/* MOBILE */
+@media(max-width:650px){
+
+  .selection,
+  .health,
+  .controls{
+    grid-template-columns:1fr;
+  }
+
+  .arena{
+    height:350px;
+  }
+
+  .fighter{
+    width:100px;
+  }
+
+  .fighter .emoji{
+    font-size:60px;
+  }
+
+  .buttons button{
+    font-size:12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+<div class="header">
+<h1>💰 BILLIIONAIRE × 🐯 ANIMAL FIGHT</h1>
+<p>Choose your billionaire + animal and defeat the CPU!</p>
+</div>
+
+<!-- CHARACTER SELECTION -->
+
+<div class="selection">
+
+<div class="box">
+<h2>🧑 PLAYER</h2>
+
+<select id="player">
+<option>Elon Musk</option>
+<option>Jeff Bezos</option>
+<option>Mark Zuckerberg</option>
+<option>Bill Gates</option>
+<option>Mukesh Ambani</option>
+<option>Warren Buffett</option>
+</select>
+
+<select id="animal1">
+<option value="lion">🦁 Lion</option>
+<option value="tiger">🐯 Tiger</option>
+<option value="gorilla">🦍 Gorilla</option>
+<option value="wolf">🐺 Wolf</option>
+<option value="eagle">🦅 Eagle</option>
+<option value="bear">🐻 Bear</option>
+<option value="dragon">🐉 Dragon</option>
+</select>
+
+</div>
+
+<div class="box">
+<h2>🤖 CPU</h2>
+
+<select id="cpu">
+<option>Jeff Bezos</option>
+<option>Elon Musk</option>
+<option>Mark Zuckerberg</option>
+<option>Bill Gates</option>
+<option>Mukesh Ambani</option>
+<option>Warren Buffett</option>
+</select>
+
+<select id="animal2">
+<option value="tiger">🐯 Tiger</option>
+<option value="lion">🦁 Lion</option>
+<option value="gorilla">🦍 Gorilla</option>
+<option value="wolf">🐺 Wolf</option>
+<option value="eagle">🦅 Eagle</option>
+<option value="bear">🐻 Bear</option>
+<option value="dragon">🐉 Dragon</option>
+</select>
+
+</div>
+
+</div>
+
+<!-- HEALTH -->
+
+<div class="health">
+
+<div>
+<div class="playerName" id="pName">ELON MUSK</div>
+<div class="healthbar">
+<div id="hp1"></div>
+</div>
+<div class="energy">
+<div id="energy1"></div>
+</div>
+</div>
+
+<div class="enemy">
+<div class="playerName" id="cName">JEFF BEZOS</div>
+<div class="healthbar">
+<div id="hp2"></div>
+</div>
+<div class="energy">
+<div id="energy2"></div>
+</div>
+</div>
+
+</div>
+
+<!-- ARENA -->
+
+<div class="arena">
+
+<div class="sun"></div>
+<div class="building"></div>
+
+<div class="status" id="status">
+PRESS START
+</div>
+
+<div class="fighter p1" id="fighter1">
+
+<div class="emoji" id="emoji1">🦁</div>
+
+<div class="label">PLAYER</div>
+
+</div>
+
+<div class="fighter p2" id="fighter2">
+
+<div class="emoji" id="emoji2">🐯</div>
+
+<div class="label">CPU</div>
+
+</div>
+
+<div class="ground"></div>
+
+</div>
+
+<!-- START -->
+
+<div class="start">
+<button id="start">⚔️ START FIGHT</button>
+</div>
+
+<!-- CONTROLS -->
+
+<div class="controls">
+
+<div class="controlBox">
+
+<h3>🎮 PLAYER MOVEMENT</h3>
+
+<div class="buttons">
+
+<button id="left">⬅️</button>
+<button id="jump">⬆️ JUMP</button>
+<button id="right">➡️</button>
+
+<button id="block" class="block">🛡 BLOCK</button>
+<button id="dash">💨 DASH</button>
+<button id="taunt">😎 TAUNT</button>
+
+</div>
+
+</div>
+
+<div class="controlBox">
+
+<h3>⚔️ ATTACKS</h3>
+
+<div class="buttons">
+
+<button class="attack" id="punch">👊 PUNCH</button>
+<button class="attack" id="kick">🦵 KICK</button>
+<button class="attack" id="grab">🤝 GRAB</button>
+
+<button class="special" id="special">🔥 SPECIAL</button>
+<button class="special" id="super">💥 SUPER</button>
+<button class="special" id="beast">🐲 BEAST</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="result" id="result">
+🏟️ Ready for battle!
+</div>
+
+</div>
+
+<script>
+
+const billionaires = {
+
+"Elon Musk":92,
+"Jeff Bezos":88,
+"Mark Zuckerberg":84,
+"Bill Gates":86,
+"Mukesh Ambani":91,
+"Warren Buffett":89
+
+};
+
+const animals = {
+
+lion:{
+emoji:"🦁",
+power:18,
+special:"ROAR"
+},
+
+tiger:{
+emoji:"🐯",
+power:20,
+special:"CLAW"
+},
+
+gorilla:{
+emoji:"🦍",
+power:24,
+special:"SMASH"
+},
+
+wolf:{
+emoji:"🐺",
+power:17,
+special:"BITE"
+},
+
+eagle:{
+emoji:"🦅",
+power:15,
+special:"DIVE"
+},
+
+bear:{
+emoji:"🐻",
+power:22,
+special:"SLAM"
+},
+
+dragon:{
+emoji:"🐉",
+power:30,
+special:"FIRE"
+}
+
+};
+
+let hp1=100;
+let hp2=100;
+
+let energy1=0;
+let energy2=0;
+
+let x1=8;
+let x2=82;
+
+let running=false;
+let blocking=false;
+
+let beastMode=false;
+
+const $=id=>document.getElementById(id);
+
+function updateUI(){
+
+$("pName").textContent=$("player").value.toUpperCase();
+$("cName").textContent=$("cpu").value.toUpperCase();
+
+$("emoji1").textContent=
+animals[$("animal1").value].emoji;
+
+$("emoji2").textContent=
+animals[$("animal2").value].emoji;
+
+$("hp1").style.width=hp1+"%";
+$("hp2").style.width=hp2+"%";
+
+$("energy1").style.width=energy1+"%";
+$("energy2").style.width=energy2+"%";
+
+$("fighter1").style.left=x1+"%";
+
+$("fighter2").style.right=(100-x2-10)+"%";
+
+}
+
+function reset(){
+
+hp1=100;
+hp2=100;
+
+energy1=0;
+energy2=0;
+
+x1=8;
+x2=82;
+
+running=false;
+
+blocking=false;
+
+beastMode=false;
+
+$("fighter1").classList.remove("transform");
+$("fighter2").classList.remove("transform");
+
+$("status").textContent="PRESS START";
+
+$("result").textContent="🏟️ Ready for battle!";
+
+$("start").textContent="⚔️ START FIGHT";
+
+updateUI();
+
+}
+
+function startGame(){
+
+if(running){
+
+reset();
+
+return;
+
+}
+
+hp1=100;
+hp2=100;
+
+energy1=0;
+energy2=0;
+
+running=true;
+
+$("status").textContent="🔥 FIGHT!";
+
+$("result").textContent="⚔️ Battle started!";
+
+$("start").textContent="🔄 RESTART";
+
+updateUI();
+
+}
+
+function playerAttack(type){
+
+if(!running) return;
+
+let distance=Math.abs(x1-x2);
+
+if(distance>28){
+
+$("status").textContent="↔️ MOVE CLOSER!";
+
+return;
+
+}
+
+let animal=
+animals[$("animal1").value];
+
+let damage=0;
+
+if(type==="punch")
+damage=7+animal.power/6;
+
+if(type==="kick")
+damage=10+animal.power/5;
+
+if(type==="grab")
+damage=14+animal.power/4;
+
+if(type==="special"){
+
+if(energy1<60){
+
+$("status").textContent="⚡ NEED 60 ENERGY!";
+
+return;
+
+}
+
+damage=22+animal.power/2;
+
+energy1-=60;
+
+}
+
+if(type==="super"){
+
+if(energy1<100){
+
+$("status").textContent="💥 SUPER NEEDS 100 ENERGY!";
+
+return;
+
+}
+
+damage=38+animal.power;
+
+energy1=0;
+
+}
+
+if(type==="beast"){
+
+if(energy1<100){
+
+$("status").textContent="🐲 NEED FULL ENERGY!";
+
+return;
+
+}
+
+beastMode=true;
+
+damage=45;
+
+energy1=0;
+
+$("fighter1").classList.add("transform");
+
+setTimeout(()=>{
+
+$("fighter1").classList.remove("transform");
+
+beastMode=false;
+
+},5000);
+
+}
+
+damage=Math.floor(
+damage+
+Math.random()*7
+);
+
+hp2=Math.max(
+0,
+hp2-damage
+);
+
+energy1=Math.min(
+100,
+energy1+15
+);
+
+hitAnimation(2);
+
+$("status").textContent=
+"💥 "+type.toUpperCase()+" -"+damage;
+
+updateUI();
+
+checkWinner();
+
+}
+
+function hitAnimation(player){
+
+let el=
+player===1?
+$("fighter1"):
+$("fighter2");
+
+el.classList.remove("hit");
+
+void el.offsetWidth;
+
+el.classList.add("hit");
+
+setTimeout(()=>el.classList.remove("hit"),250);
+
+}
+
+function cpuAttack(){
+
+if(!running) return;
+
+let distance=Math.abs(x1-x2);
+
+if(distance<30){
+
+let animal=
+animals[$("animal2").value];
+
+let damage=
+8+
+animal.power/5+
+Math.random()*6;
+
+if(blocking){
+
+damage*=0.25;
+
+$("status").textContent="🛡 BLOCKED!";
+
+}
+
+damage=Math.floor(damage);
+
+hp1=Math.max(
+0,
+hp1-damage
+);
+
+energy2=Math.min(
+100,
+energy2+14
+);
+
+hitAnimation(1);
+
+if(!blocking){
+
+$("status").textContent=
+"🤖 CPU HIT -"+damage;
+
+}
+
+checkWinner();
+
+}else{
+
+if(x2>x1)
+x2-=3;
+else
+x2+=3;
+
+}
+
+updateUI();
+
+}
+
+function checkWinner(){
+
+if(hp1<=0){
+
+running=false;
+
+$("status").textContent=
+"💀 DEFEAT!";
+
+$("result").textContent=
+"🏆 "+$("cpu").value+" WINS!";
+
+}
+
+if(hp2<=0){
+
+running=false;
+
+$("status").textContent=
+"🏆 VICTORY!";
+
+$("result").textContent=
+"🎉 "+$("player").value+" WINS!";
+
+}
+
+}
+
+$("start").onclick=startGame;
+
+$("left").onclick=()=>{
+
+if(!running)return;
+
+x1=Math.max(
+2,
+x1-5
+);
+
+updateUI();
+
+};
+
+$("right").onclick=()=>{
+
+if(!running)return;
+
+x1=Math.min(
+88,
+x1+5
+);
+
+updateUI();
+
+};
+
+$("jump").onclick=()=>{
+
+if(!running)return;
+
+$("status").textContent="⬆️ JUMP!";
+
+$("fighter1").style.bottom="145px";
+
+setTimeout(()=>{
+
+$("fighter1").style.bottom="75px";
+
+},350);
+
+};
+
+$("dash").onclick=()=>{
+
+if(!running)return;
+
+x1=Math.min(
+90,
+x1+12
+);
+
+$("status").textContent="💨 DASH!";
+
+updateUI();
+
+};
+
+$("taunt").onclick=()=>{
+
+if(!running)return;
+
+$("status").textContent="😎 "+$("player").value+" TAUNTS!";
+
+};
+
+$("block").onpointerdown=()=>{
+
+if(!running)return;
+
+blocking=true;
+
+$("status").textContent="🛡 BLOCKING";
+
+};
+
+$("block").onpointerup=()=>{
+
+blocking=false;
+
+};
+
+$("punch").onclick=()=>playerAttack("punch");
+
+$("kick").onclick=()=>playerAttack("kick");
+
+$("grab").onclick=()=>playerAttack("grab");
+
+$("special").onclick=()=>playerAttack("special");
+
+$("super").onclick=()=>playerAttack("super");
+
+$("beast").onclick=()=>playerAttack("beast");
+
+$("player").onchange=reset;
+$("cpu").onchange=reset;
+$("animal1").onchange=reset;
+$("animal2").onchange=reset;
+
+
+/* KEYBOARD */
+
+document.addEventListener("keydown",e=>{
+
+if(!running)return;
+
+if(e.key==="a")
+$("left").click();
+
+if(e.key==="d")
+$("right").click();
+
+if(e.key==="w")
+$("jump").click();
+
+if(e.key==="j")
+$("punch").click();
+
+if(e.key==="k")
+$("kick").click();
+
+if(e.key==="l")
+$("grab").click();
+
+if(e.key==="u")
+$("special").click();
+
+if(e.key==="i")
+$("super").click();
+
+if(e.key==="o")
+$("beast").click();
+
+if(e.key==="s")
+blocking=true;
+
+});
+
+document.addEventListener("keyup",e=>{
+
+if(e.key==="s")
+blocking=false;
+
+});
+
+
+/* CPU LOOP */
+
+setInterval(()=>{
+
+if(running){
+
+if(Math.random()<0.65){
+
+cpuAttack();
+
+}
+
+energy2=Math.min(
+100,
+energy2+2
+);
+
+energy1=Math.min(
+100,
+energy1+1
+);
+
+updateUI();
+
+}
+
+},500);
+
+
+/* INITIAL */
+
+updateUI();
+
+</script>
+
+</body>
+</html>
