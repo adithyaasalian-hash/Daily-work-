@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaVPN</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#07111f;
+  color:#fff;
+  min-height:100vh;
+}
+
+.app{
+  width:100%;
+  max-width:900px;
+  margin:auto;
+  min-height:100vh;
+  background:#0b1728;
+}
+
+/* HEADER */
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px;
+  border-bottom:1px solid #1d3048;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:900;
+}
+
+.logo span{
+  color:#35e0a1;
+}
+
+.premium{
+  background:#182d43;
+  border:1px solid #2d4965;
+  color:#6ff0bd;
+  padding:8px 12px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+/* MAIN */
+
+.main{
+  padding:22px;
+}
+
+/* STATUS */
+
+.status{
+  text-align:center;
+  margin-top:5px;
+}
+
+.status-text{
+  color:#93a7bd;
+  font-size:14px;
+}
+
+.server-name{
+  font-size:27px;
+  font-weight:900;
+  margin-top:5px;
+}
+
+/* POWER BUTTON */
+
+.power-area{
+  display:flex;
+  justify-content:center;
+  margin:30px 0;
+}
+
+.power{
+  width:190px;
+  height:190px;
+  border-radius:50%;
+  border:10px solid #172c42;
+  background:#0d1e31;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 0 0 8px #0a1828;
+  transition:.25s;
+}
+
+.power:hover{
+  transform:scale(1.03);
+}
+
+.power.connected{
+  border-color:#35e0a1;
+  box-shadow:
+    0 0 0 8px #0a1828,
+    0 0 35px #35e0a155;
+}
+
+.power-icon{
+  font-size:65px;
+}
+
+.connected .power-icon{
+  color:#35e0a1;
+}
+
+/* TIMER */
+
+.timer{
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+  color:#35e0a1;
+  margin-top:-10px;
+}
+
+/* CONNECTION INFO */
+
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:28px;
+}
+
+.info{
+  background:#101f32;
+  border:1px solid #1e344c;
+  border-radius:14px;
+  padding:16px;
+}
+
+.info-label{
+  color:#8297ae;
+  font-size:12px;
+}
+
+.info-value{
+  margin-top:6px;
+  font-size:17px;
+  font-weight:bold;
+}
+
+/* SPEED */
+
+.speed{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+
+.speed-box{
+  background:#101f32;
+  border:1px solid #1e344c;
+  border-radius:14px;
+  padding:18px;
+}
+
+.speed-title{
+  color:#8297ae;
+  font-size:13px;
+}
+
+.speed-value{
+  font-size:24px;
+  font-weight:900;
+  margin-top:5px;
+}
+
+.unit{
+  color:#8297ae;
+  font-size:12px;
+}
+
+/* SERVER */
+
+.server-section{
+  margin-top:25px;
+}
+
+.section-title{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.section-title h2{
+  font-size:18px;
+}
+
+.server-list{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.server{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:13px;
+  background:#101f32;
+  border:1px solid #1e344c;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+.server:hover{
+  border-color:#35e0a1;
+}
+
+.server-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.flag{
+  font-size:25px;
+}
+
+.server-country{
+  font-weight:bold;
+}
+
+.server-city{
+  color:#8297ae;
+  font-size:12px;
+  margin-top:2px;
+}
+
+.ping{
+  color:#35e0a1;
+  font-size:12px;
+}
+
+/* SETTINGS */
+
+.settings{
+  margin-top:25px;
+  background:#101f32;
+  border:1px solid #1e344c;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.setting{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:17px;
+  border-bottom:1px solid #1e344c;
+}
+
+.setting:last-child{
+  border-bottom:0;
+}
+
+.setting-title{
+  font-weight:bold;
+}
+
+.setting-description{
+  color:#8297ae;
+  font-size:12px;
+  margin-top:3px;
+}
+
+/* SWITCH */
+
+.switch{
+  position:relative;
+  width:48px;
+  height:26px;
+}
+
+.switch input{
+  display:none;
+}
+
+.slider{
+  position:absolute;
+  inset:0;
+  background:#34465b;
+  border-radius:30px;
+  cursor:pointer;
+}
+
+.slider:before{
+  content:"";
+  position:absolute;
+  width:20px;
+  height:20px;
+  left:3px;
+  top:3px;
+  background:white;
+  border-radius:50%;
+  transition:.2s;
+}
+
+input:checked + .slider{
+  background:#35c995;
+}
+
+input:checked + .slider:before{
+  transform:translateX(22px);
+}
+
+/* FOOTER */
+
+footer{
+  text-align:center;
+  color:#62778e;
+  font-size:11px;
+  padding:25px;
+}
+
+/* MOBILE */
+
+@media(max-width:600px){
+
+  .main{
+    padding:16px;
+  }
+
+  .power{
+    width:165px;
+    height:165px;
+  }
+
+  .info-grid{
+    grid-template-columns:1fr;
+  }
+
+  .server-list{
+    grid-template-columns:1fr;
+  }
+
+  .speed{
+    grid-template-columns:1fr 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+  <div class="logo">🔐 Nova<span>VPN</span></div>
+  <div class="premium">PRO</div>
+</header>
+
+<div class="main">
+
+<div class="status">
+
+<div class="status-text" id="statusText">
+Not protected
+</div>
+
+<div class="server-name" id="serverName">
+🇮🇳 India
+</div>
+
+</div>
+
+
+<!-- POWER BUTTON -->
+
+<div class="power-area">
+
+<div class="power" id="powerButton">
+
+<div class="power-icon">
+⏻
+</div>
+
+</div>
+
+</div>
+
+<div class="timer" id="timer">
+00:00:00
+</div>
+
+
+<!-- CONNECTION INFO -->
+
+<div class="info-grid">
+
+<div class="info">
+<div class="info-label">YOUR IP</div>
+<div class="info-value" id="ip">
+192.168.1.100
+</div>
+</div>
+
+<div class="info">
+<div class="info-label">VPN IP</div>
+<div class="info-value" id="vpnIp">
+—
+</div>
+</div>
+
+<div class="info">
+<div class="info-label">PROTOCOL</div>
+<div class="info-value">
+WireGuard
+</div>
+</div>
+
+</div>
+
+
+<!-- SPEED -->
+
+<div class="speed">
+
+<div class="speed-box">
+
+<div class="speed-title">
+DOWNLOAD
+</div>
+
+<div class="speed-value">
+<span id="download">0</span>
+<span class="unit">Mbps</span>
+</div>
+
+</div>
+
+<div class="speed-box">
+
+<div class="speed-title">
+UPLOAD
+</div>
+
+<div class="speed-value">
+<span id="upload">0</span>
+<span class="unit">Mbps</span>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- SERVERS -->
+
+<div class="server-section">
+
+<div class="section-title">
+<h2>🌍 VPN Locations</h2>
+<span style="color:#8297ae;font-size:12px">
+Select server
+</span>
+</div>
+
+<div class="server-list">
+
+<div class="server" data-country="🇮🇳 India" data-city="Mumbai">
+<div class="server-left">
+<div class="flag">🇮🇳</div>
+<div>
+<div class="server-country">India</div>
+<div class="server-city">Mumbai</div>
+</div>
+</div>
+<div class="ping">24 ms</div>
+</div>
+
+
+<div class="server" data-country="🇸🇬 Singapore" data-city="Singapore">
+<div class="server-left">
+<div class="flag">🇸🇬</div>
+<div>
+<div class="server-country">Singapore</div>
+<div class="server-city">Singapore</div>
+</div>
+</div>
+<div class="ping">42 ms</div>
+</div>
+
+
+<div class="server" data-country="🇯🇵 Japan" data-city="Tokyo">
+<div class="server-left">
+<div class="flag">🇯🇵</div>
+<div>
+<div class="server-country">Japan</div>
+<div class="server-city">Tokyo</div>
+</div>
+</div>
+<div class="ping">68 ms</div>
+</div>
+
+
+<div class="server" data-country="🇬🇧 UK" data-city="London">
+<div class="server-left">
+<div class="flag">🇬🇧</div>
+<div>
+<div class="server-country">United Kingdom</div>
+<div class="server-city">London</div>
+</div>
+</div>
+<div class="ping">128 ms</div>
+</div>
+
+
+<div class="server" data-country="🇺🇸 USA" data-city="New York">
+<div class="server-left">
+<div class="flag">🇺🇸</div>
+<div>
+<div class="server-country">United States</div>
+<div class="server-city">New York</div>
+</div>
+</div>
+<div class="ping">145 ms</div>
+</div>
+
+
+<div class="server" data-country="🇩🇪 Germany" data-city="Frankfurt">
+<div class="server-left">
+<div class="flag">🇩🇪</div>
+<div>
+<div class="server-country">Germany</div>
+<div class="server-city">Frankfurt</div>
+</div>
+</div>
+<div class="ping">119 ms</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- SETTINGS -->
+
+<div class="settings">
+
+<div class="setting">
+
+<div>
+<div class="setting-title">🛡 Kill Switch</div>
+<div class="setting-description">
+Block traffic if VPN disconnects
+</div>
+</div>
+
+<label class="switch">
+<input type="checkbox" id="killSwitch">
+<span class="slider"></span>
+</label>
+
+</div>
+
+
+<div class="setting">
+
+<div>
+<div class="setting-title">⚡ Auto Connect</div>
+<div class="setting-description">
+Connect automatically when available
+</div>
+</div>
+
+<label class="switch">
+<input type="checkbox" id="autoConnect">
+<span class="slider"></span>
+</label>
+
+</div>
+
+
+<div class="setting">
+
+<div>
+<div class="setting-title">🚀 Turbo Mode</div>
+<div class="setting-description">
+Optimize simulated connection speed
+</div>
+</div>
+
+<label class="switch">
+<input type="checkbox" id="turbo">
+<span class="slider"></span>
+</label>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+NovaVPN Web Interface • Front-end simulation
+</footer>
+
+</div>
+
+
+<script>
+
+let connected=false;
+
+let seconds=0;
+
+let timerInterval=null;
+
+let speedInterval=null;
+
+let selectedCountry="🇮🇳 India";
+
+let selectedCity="Mumbai";
+
+
+const power=
+document.getElementById("powerButton");
+
+const statusText=
+document.getElementById("statusText");
+
+const serverName=
+document.getElementById("serverName");
+
+const timer=
+document.getElementById("timer");
+
+const vpnIp=
+document.getElementById("vpnIp");
+
+const download=
+document.getElementById("download");
+
+const upload=
+document.getElementById("upload");
+
+
+function formatTime(){
+
+let h=
+Math.floor(seconds/3600);
+
+let m=
+Math.floor((seconds%3600)/60);
+
+let s=
+seconds%60;
+
+timer.textContent=
+String(h).padStart(2,"0")+":"+
+String(m).padStart(2,"0")+":"+
+String(s).padStart(2,"0");
+
+}
+
+
+/* CONNECT */
+
+power.addEventListener("click",()=>{
+
+if(connected){
+
+disconnect();
+
+}else{
+
+connect();
+
+}
+
+});
+
+
+function connect(){
+
+connected=true;
+
+power.classList.add("connected");
+
+statusText.textContent=
+"Protected • Connected";
+
+serverName.textContent=
+selectedCountry+" • "+selectedCity;
+
+vpnIp.textContent=
+randomIP();
+
+seconds=0;
+
+timerInterval=setInterval(()=>{
+
+seconds++;
+
+formatTime();
+
+},1000);
+
+
+speedInterval=setInterval(()=>{
+
+let turbo=
+document.getElementById("turbo").checked;
+
+let max=
+turbo?950:650;
+
+download.textContent=
+Math.floor(
+Math.random()*max+80
+);
+
+upload.textContent=
+Math.floor(
+Math.random()*250+20
+);
+
+},1000);
+
+}
+
+
+/* DISCONNECT */
+
+function disconnect(){
+
+connected=false;
+
+power.classList.remove("connected");
+
+statusText.textContent=
+"Not protected";
+
+vpnIp.textContent="—";
+
+download.textContent="0";
+
+upload.textContent="0";
+
+clearInterval(timerInterval);
+
+clearInterval(speedInterval);
+
+}
+
+
+/* RANDOM VPN IP */
+
+function randomIP(){
+
+return (
+"10."+ 
+Math.floor(Math.random()*255)+"."+
+Math.floor(Math.random()*255)+"."+
+Math.floor(Math.random()*255)
+);
+
+}
+
+
+/* SERVER SELECTION */
+
+document.querySelectorAll(".server")
+.forEach(server=>{
+
+server.addEventListener("click",()=>{
+
+selectedCountry=
+server.dataset.country;
+
+selectedCity=
+server.dataset.city;
+
+serverName.textContent=
+selectedCountry+" • "+selectedCity;
+
+if(connected){
+
+disconnect();
+
+setTimeout(connect,400);
+
+}
+
+});
+
+});
+
+
+/* AUTO CONNECT */
+
+document.getElementById("autoConnect")
+.addEventListener("change",function(){
+
+if(this.checked && !connected){
+
+connect();
+
+}
+
+});
+
+
+formatTime();
+
+</script>
+
+</body>
+</html>
